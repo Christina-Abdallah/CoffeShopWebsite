@@ -1,0 +1,59 @@
+# -----------------------------------------------------------------------------
+# Brew & Co. — Docker Compose (dev server)
+# -----------------------------------------------------------------------------
+# What is this file?
+#   docker-compose.yml tells Docker how to build and run the app container.
+#   Think of it as a recipe: it picks a base image (Node.js), installs
+#   dependencies, maps your local code into the container, and starts the
+#   Vite dev server so you can see the site in a browser.
+#
+# Who uses this?
+#   Backend/DevOps set it up. Frontend devs run `docker compose up` and
+#   edit code on their local machine while Docker serves it.
+# -----------------------------------------------------------------------------
+
+services:
+  # `frontend` is the name of our only service. You can have many services
+  # here (backend API, database, proxy, etc.), but this project is currently
+  # a single static React frontend.
+  frontend:
+    # Build the image from the Dockerfile in the current folder (.).
+    # If a Dockerfile does not exist yet, Docker will raise an error.
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Friendly name shown in `docker ps`.
+    container_name: brewco-frontend
+
+    # Map host port 5175 to container port 5173 (Vite's default dev port).
+    # 5173/5174 were already taken on this dev server by other projects.
+    # Visit http://localhost:5175 or http://<dev-server-ip>:5175 in a browser.
+    ports:
+      - "5175:5173"
+
+    # Bind mount: keep container node_modules, but mirror live source changes.
+    #   .:/app          -> project root is visible inside the container at /app
+    #   /app/node_modules -> protects container-installed modules from being
+    #                        overwritten by an empty host node_modules folder.
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+    # Run Vite dev server and allow connections from outside the container.
+    # Without --host, the server only listens on 127.0.0.1 inside the
+    # container and you cannot reach it from the host browser.
+    command: ["npm", "run", "dev", "--", "--host"]
+
+    # Run in the foreground so logs appear in the terminal.
+    # Press Ctrl+C to stop. Add -d (`docker compose up -d`) to detach.
+    stdin_open: true
+    tty: true
+
+    # Auto-restart if the container crashes, but not if we stop it manually.
+    restart: unless-stopped
+
+    # Optional labels for teammates / monitoring.
+    labels:
+      - "project=brew-co"
+      - "env=dev"
