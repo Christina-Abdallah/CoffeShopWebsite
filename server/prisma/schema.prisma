@@ -1,22 +1,20 @@
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  
 }
 
 model Reservation {
-  id        String   @id @default(uuid())
+  id        String            @id @default(uuid())
   name      String
-  date      DateTime 
-  time      String   
+  date      DateTime
+  time      String
   guests    Int
   status    ReservationStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
   @@map("reservations")
 }
@@ -25,15 +23,23 @@ enum ReservationStatus {
   PENDING
   CONFIRMED
   CANCELLED
+  COMPLETED
 }
 
 model ContactMessage {
-  id        String   @id @default(uuid())
+  id        String        @id @default(uuid())
   fullName  String
   email     String
   subject   String?
   message   String
-  createdAt DateTime @default(now())
+  status    ContactStatus @default(UNREAD)
+  createdAt DateTime      @default(now())
 
   @@map("contact_messages")
+}
+
+enum ContactStatus {
+  UNREAD
+  READ
+  REPLIED
 }

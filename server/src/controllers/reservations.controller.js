@@ -115,7 +115,7 @@ async function createReservation(req, res, next) {
     });
 
     res.status(201).json({
-      message: "Réservation créée avec succès.",
+      message: "Reservation created successfully.",
       reservation,
     });
   } catch (err) {
@@ -155,7 +155,7 @@ async function getReservationById(req, res, next) {
 
     if (!reservation) {
       return res.status(404).json({
-        error: "Réservation introuvable.",
+        error: "Reservation not found.",
       });
     }
 
@@ -179,7 +179,7 @@ async function updateReservation(req, res, next) {
       ...data,
     };
 
-    // Prisma attend un Date pour le champ date
+    // Prisma expects a Date object for the date field
     if (data.date) {
       updateData.date = new Date(data.date);
     }
@@ -190,7 +190,7 @@ async function updateReservation(req, res, next) {
     });
 
     res.json({
-      message: "Réservation mise à jour avec succès.",
+      message: "Reservation updated successfully.",
       reservation,
     });
   } catch (err) {
@@ -212,7 +212,7 @@ async function deleteReservation(req, res, next) {
     });
 
     res.json({
-      message: "Réservation supprimée avec succès.",
+      message: "Reservation deleted successfully.",
     });
   } catch (err) {
     next(err);
@@ -240,8 +240,10 @@ async function checkAvailability(req, res, next) {
       });
     }
 
-    const startOfDay = new Date(`${date}T00:00:00`);
-    const endOfDay = new Date(`${date}T23:59:59.999`);
+    // Both parsed in explicit UTC to stay consistent with createReservation,
+    // which stores `date` as new Date(data.date) (UTC when data.date is ISO).
+    const startOfDay = new Date(`${date}T00:00:00Z`);
+    const endOfDay = new Date(`${date}T23:59:59.999Z`);
 
     const reservations = await prisma.reservation.findMany({
       where: {
