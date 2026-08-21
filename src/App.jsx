@@ -6,8 +6,7 @@ import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Contact from "./pages/Contact";
 import Reservation from "./pages/Reservation";
-import { ThemeProvider } from "./hooks/useTheme";
-
+import { ThemeProvider } from "./hooks/ThemeProvider";
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {

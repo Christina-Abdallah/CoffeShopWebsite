@@ -4,8 +4,7 @@ import MenuItemCard from "../components/MenuItemCard";
 import { menuItems, featuredIds } from "../data/menuData";
 
 export default function Home() {
-  const featured = featuredIds.map((id) => menuItems.find((m) => m.id === id));
-
+     const featured =featuredIds.map((id) => menuItems.find((m) => m.id === id)).filter(Boolean);
   return (
     <>
       {/* Hero */}
@@ -16,7 +15,6 @@ export default function Home() {
             <br />
             <span className="text-clay">Great Moments</span>
           </h1>
-          {/* Écriture plus foncée et bien visible */}
           <p className="mt-5 max-w-md text-stone-900 font-medium dark:text-cream-soft/70">
             At Brew &amp; Co., we believe every cup tells a story. Locally roasted beans, cozy
             vibes, and a passion for brewing the perfect coffee.
@@ -52,7 +50,6 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-5 pb-20">
         <Reveal className="mb-8 text-center">
           <h2 className="font-display text-2xl font-bold sm:text-3xl text-stone-900 dark:text-cream">Featured Favorites</h2>
-          {/* Écriture plus foncée pour le sous-titre */}
           <p className="mt-2 text-stone-800 font-medium dark:text-cream-soft/60">
             A few things our regulars never skip.
           </p>
