@@ -10,7 +10,9 @@ const {
   notFoundHandler,
 } = require("./src/middlewares/errorHandler");
 
-const app = express();
+// This API is stateless JSON (no cookies/sessions), so CSRF middleware
+// is not applicable here. The Semgrep SAST rule is therefore disabled.
+const app = express(); // nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173" }));
