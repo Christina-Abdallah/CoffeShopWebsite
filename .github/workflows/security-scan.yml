@@ -1,0 +1,93 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Gitleaks — Secret Leak Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  semgrep:
+    name: Semgrep — SAST
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: semgrep --config auto --error --verbose .
+
+  trivy:
+    name: Trivy — Dependency, IaC & Docker Image Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scanner
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend Docker image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: brew-co-frontend:security-scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build backend Docker image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          push: false
+          load: true
+          tags: brew-co-backend:security-scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run Trivy frontend image scanner
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: brew-co-frontend:security-scan
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+
+      - name: Run Trivy backend image scanner
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: brew-co-backend:security-scan
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '1'

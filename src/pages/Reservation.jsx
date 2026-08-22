@@ -101,14 +101,12 @@ export default function Reservation() {
 
     try {
       // Send reservation to Express backend
-      const response = await createReservation({
+      await createReservation({
         name: values.name,
         date: values.date,
         time: values.time,
         guests: Number(values.guests),
       });
-
-      console.log("Reservation API response:", response);
 
       // Reservation successfully created
       setConfirmed({
@@ -124,8 +122,6 @@ export default function Reservation() {
       setValues(initialForm);
       setErrors({});
     } catch (err) {
-      console.error("Reservation error:", err);
-
       setApiError(
         err.message || "Unable to create the reservation. Please try again."
       );

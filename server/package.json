@@ -1,7 +1,7 @@
 {
   "name": "brew-and-co-server",
   "version": "1.0.0",
-  "description": "API REST pour Brew & Co. - Express + Prisma + PostgreSQL",
+  "description": "Brew & Co. REST API - Express + Prisma + PostgreSQL",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

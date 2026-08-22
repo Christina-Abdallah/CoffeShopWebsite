@@ -119,13 +119,12 @@ export default function Contact() {
     setLoading(true);
 
     try {
-      const response = await createContactMessage({
-        fullName: values.name.trim(),        email: values.email.trim(),
-        subject: values.subject.trim() ,
+      await createContactMessage({
+        fullName: values.name.trim(),
+        email: values.email.trim(),
+        subject: values.subject.trim(),
         message: values.message.trim(),
       });
-
-      console.log("Contact message successfully sent:", response);
 
       // Success
       setSubmitted(true);
@@ -134,8 +133,6 @@ export default function Contact() {
       setValues(initialForm);
       setErrors({});
     } catch (err) {
-      console.error("Contact error:", err);
-
       setApiError(
         err.message ||
           "We couldn't send your message. Please try again later."

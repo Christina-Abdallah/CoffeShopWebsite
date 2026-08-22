@@ -24,7 +24,7 @@ router.post(
 router.get("/", listReservations);
 
 // GET /api/reservations/availability
-// ⚠️ Doit être AVANT /:id
+// Must be defined BEFORE /:id so Express matches it first.
 router.get("/availability", checkAvailability);
 
 // GET /api/reservations/:id

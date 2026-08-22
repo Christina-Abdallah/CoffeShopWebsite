@@ -1,0 +1,20 @@
+# Files and folders that Docker should NOT copy into the image build context.
+# This makes builds faster and keeps the image small.
+
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+README.md
+Dockerfile
+docker-compose.yml
+.env
+.env.local
+
+# Server files are not needed for the frontend image build.
+server
+server/node_modules
+server/dist
+server/.env
+server/.env.local

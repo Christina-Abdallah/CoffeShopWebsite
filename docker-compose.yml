@@ -1,0 +1,70 @@
+# -----------------------------------------------------------------------------
+# Brew & Co. — Full-Stack Docker Compose (development)
+# -----------------------------------------------------------------------------
+# Starts the frontend (Vite), backend API (Express + Prisma), and PostgreSQL.
+#
+# Usage:
+#   docker compose up -d --build
+#   docker compose logs -f
+#   docker compose down
+# -----------------------------------------------------------------------------
+
+services:
+  db:
+    image: postgres:15
+    container_name: brew-co-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: brewco
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d brewco"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: brew-co-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql://postgres:password@db:5432/brewco?schema=public"
+      PORT: 3000
+      CLIENT_URL: "http://localhost:5175"
+      NODE_ENV: production
+    ports:
+      - "3002:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma migrate deploy && npm start"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brew-co-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: "http://localhost:3002/api"
+    ports:
+      - "5175:5173"
+    depends_on:
+      - backend
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev", "--", "--host"]
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:

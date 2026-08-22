@@ -43,14 +43,14 @@ CoffeShopWebsite/
 │   │   └── FormField.jsx
 │   │
 │   ├── context/
-│   │   ├── ThemeContext.js
+│   │   ├── ThemeContext.jsx
 │   │   └── ThemeProvider.jsx
 │   │
 │   ├── data/
 │   │   └── menuData.js
 │   │
 │   ├── hooks/
-│   │   ├── useTheme.jsx
+│   │   ├── useTheme.js
 │   │   └── useReveal.js
 │   │
 │   ├── pages/
@@ -144,6 +144,44 @@ The frontend will normally be available at:
 
 ```
 http://localhost:5173
+```
+
+### Run with Docker (recommended for consistent environment)
+
+If you prefer not to install Node.js on your machine, you can run the app inside a Docker container. The container will mirror your local code changes automatically.
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Christina-Abdallah/CoffeShopWebsite.git
+cd CoffeShopWebsite
+
+# 2. Build the image and start the container
+#    -d runs it in the background. Remove -d to see logs in the terminal.
+docker compose up -d --build
+
+# 3. Open the app in a browser
+#    Default port is 5173. If that port is busy on the dev server,
+#    check docker-compose.yml for the mapped port.
+```
+
+Then visit `http://localhost:5173` (or the port shown in `docker compose ps`).
+
+To stop the container:
+
+```bash
+docker compose down
+```
+
+To view logs while the container is running:
+
+```bash
+docker compose logs -f
+```
+
+### Preview the Production Build Locally
+
+```bash
+npm run preview
 ```
 
 ---

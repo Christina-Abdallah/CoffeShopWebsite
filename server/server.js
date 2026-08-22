@@ -31,12 +31,12 @@ app.use("/api/reservations", reservationsRoutes);
 // Contact API
 app.use("/api/contact", contactRoutes);
 
-// Error handlers — doivent rester à la fin
+// Error handlers must stay at the end
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(
-    `✅ Serveur Brew & Co. lancé sur http://localhost:${PORT}`
+    `✅ Brew & Co. server running on http://localhost:${PORT}`
   );
 });
