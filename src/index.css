@@ -9,7 +9,6 @@ html {
 }
 
 body {
-  /* Autre photo d'un coffee shop branché et chaleureux (Mode Clair) */
   background-image: linear-gradient(
     rgba(250, 245, 235, 0.7),
     rgba(250, 245, 235, 0.3)
@@ -20,7 +19,6 @@ body {
   @apply text-ink font-body transition-colors duration-300;
 }
 
-/* Mode Sombre : Ambiance café feutrée */
 .dark body,
 body.dark {
   background-image: linear-gradient(
@@ -30,7 +28,6 @@ body.dark {
   @apply text-cream;
 }
 
-/* Animation au défilement */
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -41,10 +38,9 @@ body.dark {
   opacity: 1;
   transform: translateY(0);
 }
-
-/* Masque l'icône native (calendrier/horloge) des inputs date/time,
-   on garde uniquement l'icône lucide personnalisée. Le clic reste fonctionnel
-   via showPicker() géré dans FormField. */
+/* Hide the native calendar/clock icon of date/time inputs.
+   Keep only the custom Lucide icon. Clicking remains functional
+   through showPicker() handled in FormField. */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
   background: transparent;

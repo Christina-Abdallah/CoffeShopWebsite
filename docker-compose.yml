@@ -1,59 +1,70 @@
 # -----------------------------------------------------------------------------
-# Brew & Co. — Docker Compose (dev server)
+# Brew & Co. — Full-Stack Docker Compose (development)
 # -----------------------------------------------------------------------------
-# What is this file?
-#   docker-compose.yml tells Docker how to build and run the app container.
-#   Think of it as a recipe: it picks a base image (Node.js), installs
-#   dependencies, maps your local code into the container, and starts the
-#   Vite dev server so you can see the site in a browser.
+# Starts the frontend (Vite), backend API (Express + Prisma), and PostgreSQL.
 #
-# Who uses this?
-#   Backend/DevOps set it up. Frontend devs run `docker compose up` and
-#   edit code on their local machine while Docker serves it.
+# Usage:
+#   docker compose up -d --build
+#   docker compose logs -f
+#   docker compose down
 # -----------------------------------------------------------------------------
 
 services:
-  # `frontend` is the name of our only service. You can have many services
-  # here (backend API, database, proxy, etc.), but this project is currently
-  # a single static React frontend.
+  db:
+    image: postgres:15
+    container_name: brew-co-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: brewco
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d brewco"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: brew-co-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql://postgres:password@db:5432/brewco?schema=public"
+      PORT: 3000
+      CLIENT_URL: "http://localhost:5175"
+      NODE_ENV: production
+    ports:
+      - "3002:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma migrate deploy && npm start"
+
   frontend:
-    # Build the image from the Dockerfile in the current folder (.).
-    # If a Dockerfile does not exist yet, Docker will raise an error.
     build:
       context: .
       dockerfile: Dockerfile
-
-    # Friendly name shown in `docker ps`.
-    container_name: brewco-frontend
-
-    # Map host port 5175 to container port 5173 (Vite's default dev port).
-    # 5173/5174 were already taken on this dev server by other projects.
-    # Visit http://localhost:5175 or http://<dev-server-ip>:5175 in a browser.
+    container_name: brew-co-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: "http://localhost:3002/api"
     ports:
       - "5175:5173"
-
-    # Bind mount: keep container node_modules, but mirror live source changes.
-    #   .:/app          -> project root is visible inside the container at /app
-    #   /app/node_modules -> protects container-installed modules from being
-    #                        overwritten by an empty host node_modules folder.
+    depends_on:
+      - backend
     volumes:
       - .:/app
       - /app/node_modules
-
-    # Run Vite dev server and allow connections from outside the container.
-    # Without --host, the server only listens on 127.0.0.1 inside the
-    # container and you cannot reach it from the host browser.
     command: ["npm", "run", "dev", "--", "--host"]
-
-    # Run in the foreground so logs appear in the terminal.
-    # Press Ctrl+C to stop. Add -d (`docker compose up -d`) to detach.
     stdin_open: true
     tty: true
 
-    # Auto-restart if the container crashes, but not if we stop it manually.
-    restart: unless-stopped
-
-    # Optional labels for teammates / monitoring.
-    labels:
-      - "project=brew-co"
-      - "env=dev"
+volumes:
+  postgres_data:

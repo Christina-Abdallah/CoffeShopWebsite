@@ -73,25 +73,3 @@ export default function Footer() {
     </footer>
   );
 }
-// import { Coffee } from "lucide-react";
-
-//  export default function Footer() {
-//    return (
-//      <footer className="border-t border-ink/5 bg-cream-soft py-10 dark:border-cream/10 dark:bg-forest-deep">
-//        <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-5 text-center md:flex-row md:justify-between md:text-left">
-//          <div className="flex items-center gap-2 font-display text-lg font-semibold">
-//            <Coffee size={20} className="text-forest dark:text-clay-light" />
-//            Brew &amp; Co.
-//          </div>
-//          <p className="text-sm text-ink/60 dark:text-cream-soft/60">
-//            &copy; {new Date().getFullYear()} Brew &amp; Co. Locally roasted, always fresh.
-//          </p>
-//          <div className="flex gap-4 text-sm font-medium text-ink/60 dark:text-cream-soft/60">
-//            <a href="#" className="transition-colors hover:text-clay">Instagram</a>
-//            <a href="#" className="transition-colors hover:text-clay">Facebook</a>
-//            <a href="#" className="transition-colors hover:text-clay">Twitter</a>
-//          </div>
-//        </div>
-//      </footer>
-//    );
-//  }

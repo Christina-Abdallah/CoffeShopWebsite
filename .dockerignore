@@ -11,3 +11,10 @@ Dockerfile
 docker-compose.yml
 .env
 .env.local
+
+# Server files are not needed for the frontend image build.
+server
+server/node_modules
+server/dist
+server/.env
+server/.env.local

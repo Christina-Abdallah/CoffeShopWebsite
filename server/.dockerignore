@@ -1,0 +1,16 @@
+# Files and folders that Docker should NOT copy into the backend image build context.
+
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+README.md
+Dockerfile
+docker-compose.yml
+.env
+.env.local
+
+# Do not copy generated files that will be recreated during the build.
+generated/prisma
+prisma/generated
