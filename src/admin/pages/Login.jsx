@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAdmin } from "../useAdmin";
 
 export default function AdminLogin() {
   const { login } = useAdmin();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("admin@brewco.com");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,6 +16,7 @@ export default function AdminLogin() {
     setSubmitting(true);
     try {
       await login(email, password);
+      navigate("/admin", { replace: true });
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {

@@ -36,7 +36,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.SESSION_COOKIE_SECURE === "true" ||
+        (process.env.NODE_ENV === "production" && process.env.SESSION_COOKIE_SECURE !== "false"),
       sameSite: "lax",
       maxAge: 1000 * 60 * 60 * 8, // 8 hours
     },
