@@ -23,9 +23,8 @@ RUN npx prisma generate
 # Copy the rest of the backend source code.
 COPY . .
 
-# npm is only needed at build time to install dependencies; remove it so the
-# image does not ship the npm CLI's own (large) transitive dependency tree.
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+# Make the entrypoint executable (used by docker-compose for migrations + start).
+RUN chmod +x entrypoint.sh
 
 # Create a non-root user, make /app owned by it, and switch to it for security.
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001 \

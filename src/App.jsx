@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Outlet } from "react-router-dom";
 import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -8,6 +8,16 @@ import Contact from "./pages/Contact";
 import Reservation from "./pages/Reservation";
 import { ThemeProvider } from "./context/ThemeProvider";
 
+// Admin
+import { AdminProvider } from "./admin/AdminProvider";
+import AdminLogin from "./admin/pages/Login";
+import AdminDashboard from "./admin/pages/Dashboard";
+import AdminMenu from "./admin/pages/Menu";
+import AdminReservations from "./admin/pages/Reservations";
+import AdminStaff from "./admin/pages/Staff";
+import AdminSettings from "./admin/pages/Settings";
+import AdminRoute from "./admin/components/AdminRoute";
+
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -16,24 +26,83 @@ function ScrollToTop() {
   return null;
 }
 
+function PublicLayout() {
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+function AdminRouter() {
+  return (
+    <Routes>
+      <Route path="/login" element={<AdminLogin />} />
+      <Route
+        path="/"
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/menu"
+        element={
+          <AdminRoute>
+            <AdminMenu />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/reservations"
+        element={
+          <AdminRoute>
+            <AdminReservations />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/staff"
+        element={
+          <AdminRoute>
+            <AdminStaff />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <AdminRoute>
+            <AdminSettings />
+          </AdminRoute>
+        }
+      />
+    </Routes>
+  );
+}
+
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-          <main className="flex-1">
-            <Routes>
+      <AdminProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/admin/*" element={<AdminRouter />} />
+            <Route element={<PublicLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/menu" element={<Menu />} />
               <Route path="/reservation" element={<Reservation />} />
               <Route path="/contact" element={<Contact />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </BrowserRouter>
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AdminProvider>
     </ThemeProvider>
   );
 }
