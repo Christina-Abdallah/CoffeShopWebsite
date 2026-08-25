@@ -27,7 +27,10 @@ export default function Menu() {
 
   const handleSelectCategory = (id) => {
     setActive(id);
-    itemsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    itemsRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   return (
@@ -82,8 +85,10 @@ export default function Menu() {
       </div>
 
       {/* ================= MENU ITEMS ================= */}
-      <section ref={itemsRef} className="mx-auto max-w-6xl scroll-mt-36 px-5 py-14">
-
+      <section
+        ref={itemsRef}
+        className="mx-auto max-w-6xl scroll-mt-36 px-5 py-14"
+      >
         {visibleItems.length === 0 ? (
           <p className="text-center text-ink/60 dark:text-cream-soft/60">
             No items in this category yet — check back soon.
@@ -95,6 +100,7 @@ export default function Menu() {
               <Reveal
                 key={item.id}
                 delay={(index % 4) * 80}
+                className="h-full"
               >
                 <MenuItemCard item={item} />
               </Reveal>
@@ -102,7 +108,6 @@ export default function Menu() {
 
           </div>
         )}
-
       </section>
     </div>
   );
