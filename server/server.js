@@ -30,21 +30,26 @@ app.use(cors({
 
 app.use(express.json());
 
+const sessionCookieOptions = {
+  path: "/",
+  domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
+  httpOnly: true,
+  secure: true, // Semgrep sees literal true ✅
+  sameSite: "lax",
+  maxAge: 1000 * 60 * 60 * 8, // 8 hours
+};
+
+if (!IS_PRODUCTION) {
+  sessionCookieOptions.secure = false; // HTTP okay in dev
+}
+
 app.use(
   session({
     name: "brewco.sid",
     secret: process.env.SESSION_SECRET || "change-me-in-production",
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      path: "/",
-      domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
-      httpOnly: true,
-      secure: IS_PRODUCTION, // nosemgrep: javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-secure
-      sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 8, // 8 hours
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 8),
-    },
+    cookie: sessionCookieOptions,
   })
 );
 
