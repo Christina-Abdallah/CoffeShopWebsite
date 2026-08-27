@@ -11,6 +11,11 @@ WORKDIR /app
 # Patch the base Alpine image to pull in any OS security fixes.
 RUN apk upgrade --no-cache
 
+# Upgrade npm itself so its bundled dependencies (tar, minimatch, etc.)
+# are up-to-date. Trivy flags vulnerabilities in npm's own internal packages;
+# upgrading npm resolves them without touching our app dependencies.
+RUN npm install -g npm@latest
+
 # Copy package files and install production dependencies only.
 # This keeps the image smaller and avoids shipping dev-only vulnerable libs.
 COPY package.json package-lock.json ./

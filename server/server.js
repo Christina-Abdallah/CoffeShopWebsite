@@ -21,6 +21,7 @@ const {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 app.use(cors({
   origin: process.env.CLIENT_URL || "http://localhost:5173",
@@ -29,21 +30,28 @@ app.use(cors({
 
 app.use(express.json());
 
+const sessionCookieOptions = {
+  path: "/",
+  domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
+  httpOnly: true,
+  secure: true, // HTTPS-only in production
+  sameSite: "lax",
+  maxAge: 1000 * 60 * 60 * 8, // 8 hours
+  expires: new Date(Date.now() + 1000 * 60 * 60 * 8),
+};
+
+// Relax the secure flag outside production so local HTTP dev works.
+if (!IS_PRODUCTION) {
+  sessionCookieOptions.secure = false;
+}
+
 app.use(
   session({
     name: "brewco.sid",
     secret: process.env.SESSION_SECRET || "change-me-in-production",
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      path: "/",
-      domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 1000 * 60 * 60 * 8, // 8 hours
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 8),
-    },
+    cookie: sessionCookieOptions,
   })
 );
 
