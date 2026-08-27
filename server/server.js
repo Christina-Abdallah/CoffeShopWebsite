@@ -36,11 +36,13 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
+      path: "/",
+      domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
       httpOnly: true,
-      secure: process.env.SESSION_COOKIE_SECURE === "true" ||
-        (process.env.NODE_ENV === "production" && process.env.SESSION_COOKIE_SECURE !== "false"),
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 1000 * 60 * 60 * 8, // 8 hours
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 8),
     },
   })
 );
