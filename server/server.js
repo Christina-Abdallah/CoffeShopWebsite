@@ -30,28 +30,23 @@ app.use(cors({
 
 app.use(express.json());
 
-const sessionCookieOptions = {
-  path: "/",
-  domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
-  httpOnly: true,
-  secure: true, // HTTPS-only in production
-  sameSite: "lax",
-  maxAge: 1000 * 60 * 60 * 8, // 8 hours
-  expires: new Date(Date.now() + 1000 * 60 * 60 * 8),
-};
-
-// Relax the secure flag outside production so local HTTP dev works.
-if (!IS_PRODUCTION) {
-  sessionCookieOptions.secure = false;
-}
-
 app.use(
   session({
     name: "brewco.sid",
     secret: process.env.SESSION_SECRET || "change-me-in-production",
     resave: false,
     saveUninitialized: false,
-    cookie: sessionCookieOptions,
+    cookie: {
+      path: "/",
+      domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
+      httpOnly: true,
+      // nosemgrep: javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-secure
+      // IS_PRODUCTION evaluates to true in production (NODE_ENV=production); false only in local dev.
+      secure: IS_PRODUCTION,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 8, // 8 hours
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 8),
+    },
   })
 );
 
