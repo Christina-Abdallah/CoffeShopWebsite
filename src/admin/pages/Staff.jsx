@@ -1,294 +1,642 @@
+import { 
+  UsersRound, 
+  Clock, 
+  Plus, 
+  Pencil, 
+  X, 
+  Trash2, 
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import { UsersRound, Clock, Search, Plus, Pencil, X } from "lucide-react";
 import AdminLayout from "../components/AdminLayout";
-import { getStaff, createStaff, updateStaff, deleteStaff } from "../api";
+import {
+  getStaff,
+  createStaff,
+  updateStaff,
+  deleteStaff,
+} from "../api";
 
-const roles = ["Store Manager", "Head Barista", "Barista", "Pastry Chef", "Cashier"];
+const roles = [
+  "Store Manager",
+  "Head Barista",
+  "Barista",
+  "Pastry Chef",
+  "Cashier",
+];
+
 const statuses = ["ON_SHIFT", "ON_BREAK", "OFF_DUTY"];
+
 const statusBadge = {
-  ON_SHIFT: "bg-sage-light text-sage",
-  ON_BREAK: "bg-clay-100 text-clay",
-  OFF_DUTY: "bg-cream-200 text-ink-light",
+  ON_SHIFT: "bg-[#eaf5f0] text-[#1a6f54]",
+  ON_BREAK: "bg-[#fbf1ed] text-[#b55b3e]",
+  OFF_DUTY: "bg-[#f0ede7] text-[#7c6c67]",
 };
+
+// 30-minute time slots from 7:00 AM to 9:00 PM
+const timeSlots = Array.from({ length: 29 }, (_, i) => {
+  const totalMinutes = 7 * 60 + i * 30;
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+
+  return `${h12}:${m.toString().padStart(2, "0")} ${period}`;
+});
+
+const emptyForm = {
+  firstName: "",
+  lastName: "",
+  role: "Barista",
+  email: "",
+  status: "OFF_DUTY",
+  shiftStart: "",
+  shiftEnd: "",
+};
+
+function StatCard({ label, value, icon: Icon }) {
+  return (
+    <div className="bg-white rounded-[16px] p-[20px] border border-[#e9e2d8] shadow-[0px_4px_6px_0px_rgba(46,34,29,0.02)] flex flex-col gap-[12px]">
+      <div className="flex items-center justify-between">
+        <p className="text-[13px] font-medium text-[#7c6c67]">
+          {label}
+        </p>
+
+        <div className="bg-[#fbf1ed] rounded-[8px] size-[32px] flex items-center justify-center shrink-0">
+          <Icon size={16} className="text-[#b55b3e]" />
+        </div>
+      </div>
+
+      <p className="font-display font-bold text-[24px] text-[#2e221d] leading-none">
+        {value}
+      </p>
+    </div>
+  );
+}
 
 export default function AdminStaff() {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({
-    fullName: "",
-    role: "Barista",
-    email: "",
-    status: "OFF_DUTY",
-    shiftStart: "",
-    shiftEnd: "",
-  });
 
+  // null = modal closed, "new" = creating, id = editing
+  const [editing, setEditing] = useState(null);
+
+  const [form, setForm] = useState(emptyForm);
+
+  /*
+   * --------------------------------------------------
+   * INITIAL LOAD
+   * --------------------------------------------------
+   *
+   * We do not call loadStaff() directly inside useEffect
+   * because loadStaff() contains state updates.
+   */
   useEffect(() => {
-    loadStaff();
+    let cancelled = false;
+
+    async function fetchInitialStaff() {
+      try {
+        const data = await getStaff();
+
+        if (!cancelled) {
+          setStaff(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load staff:", err);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchInitialStaff();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  /*
+   * --------------------------------------------------
+   * RELOAD STAFF
+   * --------------------------------------------------
+   *
+   * Used after creating, editing, or deleting a staff member.
+   */
   async function loadStaff() {
-    setLoading(true);
     try {
       const data = await getStaff();
       setStaff(data);
     } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to reload staff:", err);
+      throw err;
     }
   }
 
-  const filtered = staff.filter(
-    (m) =>
-      m.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      m.role.toLowerCase().includes(search.toLowerCase())
-  );
+  /*
+   * --------------------------------------------------
+   * SEARCH
+   * --------------------------------------------------
+   */
+  const searchValue = search.toLowerCase().trim();
 
+  const filtered = staff.filter((member) => {
+    const fullName = member.fullName?.toLowerCase() || "";
+    const role = member.role?.toLowerCase() || "";
+
+    return (
+      fullName.includes(searchValue) ||
+      role.includes(searchValue)
+    );
+  });
+
+  /*
+   * --------------------------------------------------
+   * STAFF STATISTICS
+   * --------------------------------------------------
+   */
   const stats = {
     total: staff.length,
-    onShift: staff.filter((m) => m.status === "ON_SHIFT").length,
-    onBreak: staff.filter((m) => m.status === "ON_BREAK").length,
-    offDuty: staff.filter((m) => m.status === "OFF_DUTY").length,
+
+    onShift: staff.filter(
+      (member) => member.status === "ON_SHIFT"
+    ).length,
+
+    onBreak: staff.filter(
+      (member) => member.status === "ON_BREAK"
+    ).length,
+
+    offDuty: staff.filter(
+      (member) => member.status === "OFF_DUTY"
+    ).length,
   };
 
-  function initials(name) {
+  /*
+   * --------------------------------------------------
+   * GET INITIALS
+   * --------------------------------------------------
+   */
+  function initials(name = "") {
     return name
       .split(" ")
-      .map((n) => n[0])
+      .filter(Boolean)
+      .map((part) => part[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
   }
 
-  function startEdit(m) {
-    setEditing(m.id);
+  /*
+   * --------------------------------------------------
+   * EDIT STAFF MEMBER
+   * --------------------------------------------------
+   */
+  function startEdit(member) {
+    const [firstName, ...rest] =
+      (member.fullName || "").split(" ");
+
+    setEditing(member.id);
+
     setForm({
-      fullName: m.fullName,
-      role: m.role,
-      email: m.email,
-      status: m.status,
-      shiftStart: m.shiftStart || "",
-      shiftEnd: m.shiftEnd || "",
+      firstName: firstName || "",
+      lastName: rest.join(" "),
+      role: member.role || "Barista",
+      email: member.email || "",
+      status: member.status || "OFF_DUTY",
+      shiftStart: member.shiftStart || "",
+      shiftEnd: member.shiftEnd || "",
     });
   }
 
+  /*
+   * --------------------------------------------------
+   * CREATE STAFF MEMBER
+   * --------------------------------------------------
+   */
   function startCreate() {
     setEditing("new");
+
     setForm({
-      fullName: "",
-      role: "Barista",
-      email: "",
-      status: "OFF_DUTY",
-      shiftStart: "",
-      shiftEnd: "",
+      ...emptyForm,
     });
   }
 
+  /*
+   * --------------------------------------------------
+   * HANDLE FORM CHANGES
+   * --------------------------------------------------
+   */
+  function handleFormChange(event) {
+    const { name, value } = event.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  }
+
+  /*
+   * --------------------------------------------------
+   * SAVE STAFF MEMBER
+   * --------------------------------------------------
+   */
   async function handleSave() {
+    const fullName =
+      `${form.firstName} ${form.lastName}`.trim();
+
+    if (!fullName) {
+      alert("Please enter the staff member's name.");
+      return;
+    }
+
+    if (!form.email.trim()) {
+      alert("Please enter an email address.");
+      return;
+    }
+
+    const payload = {
+      fullName,
+      role: form.role,
+      email: form.email.trim(),
+      status: form.status,
+      shiftStart: form.shiftStart,
+      shiftEnd: form.shiftEnd,
+    };
+
     try {
       if (editing === "new") {
-        await createStaff(form);
+        await createStaff(payload);
       } else {
-        await updateStaff(editing, form);
+        await updateStaff(editing, payload);
       }
+
       await loadStaff();
+
       setEditing(null);
+      setForm({
+        ...emptyForm,
+      });
     } catch (err) {
-      alert(err.message);
+      alert(err.message || "Failed to save staff member.");
     }
   }
 
+  /*
+   * --------------------------------------------------
+   * DELETE STAFF MEMBER
+   * --------------------------------------------------
+   */
   async function handleDelete(id) {
-    if (!confirm("Remove this staff member?")) return;
+    if (!confirm("Remove this staff member?")) {
+      return;
+    }
+
     try {
       await deleteStaff(id);
       await loadStaff();
     } catch (err) {
-      alert(err.message);
+      alert(err.message || "Failed to delete staff member.");
     }
   }
 
   return (
-    <AdminLayout
-      title="Staff Management"
-      subtitle="Manage shifts, roles, and contacts of your store crew."
-    >
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Employees" value={`${stats.total} Staff`} icon={UsersRound} />
-        <StatCard label="On Shift Today" value={`${stats.onShift} Active`} icon={Clock} />
-        <StatCard label="On Break" value={`${stats.onBreak} Break`} icon={Clock} />
-        <StatCard label="Off Duty" value={`${stats.offDuty} Off`} icon={UsersRound} />
-      </div>
+   <AdminLayout
+  title="Staff Management"
+  subtitle="Manage shifts, roles, and contacts of your store crew."
+  search={search}
+  onSearchChange={setSearch}
+>
+      <div
+        style={{ fontFamily: "'Geist', sans-serif" }}
+        className="flex flex-col gap-[32px]"
+      >
+        {/* Statistics */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px]">
+          <StatCard
+            label="Total Employees"
+            value={`${stats.total} Staff`}
+            icon={UsersRound}
+          />
 
-      <div className="bg-white rounded-2xl border border-cream-200 shadow-soft overflow-hidden">
-        <div className="p-5 border-b border-cream-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-lg font-display font-semibold text-ink">All Staff Members</h2>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-light" />
-              <input
-                type="text"
-                placeholder="Search by name or role..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 pr-4 py-2 rounded-xl border border-cream-200 bg-cream-50 text-sm text-ink focus:border-clay outline-none w-full sm:w-64"
-              />
-            </div>
-            <button
-              onClick={startCreate}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-forest text-cream text-sm font-medium hover:bg-forest-light transition"
-            >
-              <Plus size={18} />
-              Add Staff
-            </button>
-          </div>
+          <StatCard
+            label="On Shift Today"
+            value={`${stats.onShift} Active`}
+            icon={Clock}
+          />
+
+          <StatCard
+            label="On Break"
+            value={`${stats.onBreak} Break`}
+            icon={Clock}
+          />
+
+          <StatCard
+            label="Off Duty"
+            value={`${stats.offDuty} Off`}
+            icon={UsersRound}
+          />
         </div>
 
-        {editing && (
-          <div className="p-5 border-b border-cream-200 bg-cream-50">
-            <h3 className="text-base font-display font-semibold text-ink mb-4">
-              {editing === "new" ? "Add Staff Member" : "Edit Staff Member"}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <input
-                placeholder="Full name"
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                className="px-4 py-2 rounded-xl border border-cream-200 bg-white text-ink outline-none focus:border-clay"
-              />
-              <select
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className="px-4 py-2 rounded-xl border border-cream-200 bg-white text-ink outline-none focus:border-clay"
+        {/* Staff table */}
+        <div className="bg-white rounded-[16px] border border-[#e9e2d8] shadow-[0px_4px_12px_0px_rgba(46,34,29,0.02)] overflow-hidden">
+          {/* Table header */}
+          <div className="px-[24px] py-[20px] border-b border-[#e9e2d8] flex flex-col sm:flex-row sm:items-center justify-between gap-[16px]">
+            <h2 className="font-display font-bold text-[18px] text-[#2e221d]">
+              All Staff Members
+            </h2>
+
+            <div className="flex items-center gap-[12px]">
+              
+
+              {/* Add Staff button */}
+              <button
+                onClick={startCreate}
+                className="flex items-center gap-[8px] px-[16px] py-[10px] rounded-[8px] bg-[#b55b3e] text-white text-[13px] font-semibold hover:opacity-90 transition whitespace-nowrap"
               >
-                {roles.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-              <input
-                type="email"
-                placeholder="Email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="px-4 py-2 rounded-xl border border-cream-200 bg-white text-ink outline-none focus:border-clay"
-              />
-              <select
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-                className="px-4 py-2 rounded-xl border border-cream-200 bg-white text-ink outline-none focus:border-clay"
-              >
-                {statuses.map((s) => (
-                  <option key={s} value={s}>{s.replace("_", " ")}</option>
-                ))}
-              </select>
-              <input
-                type="time"
-                value={form.shiftStart}
-                onChange={(e) => setForm({ ...form, shiftStart: e.target.value })}
-                className="px-4 py-2 rounded-xl border border-cream-200 bg-white text-ink outline-none focus:border-clay"
-              />
-              <input
-                type="time"
-                value={form.shiftEnd}
-                onChange={(e) => setForm({ ...form, shiftEnd: e.target.value })}
-                className="px-4 py-2 rounded-xl border border-cream-200 bg-white text-ink outline-none focus:border-clay"
-              />
+                <Plus size={14} />
+                Add Staff
+              </button>
             </div>
-            <div className="flex gap-3">
+          </div>
+
+          {/* Staff table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-[#e9e2d8]">
+                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
+                    Full Name
+                  </th>
+
+                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
+                    Role
+                  </th>
+
+                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
+                    Status
+                  </th>
+
+                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
+                    Shift Time
+                  </th>
+
+                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
+                    Contact Email
+                  </th>
+
+                  <th className="px-[24px] py-[16px]"></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="p-8 text-center text-[#7c6c67]"
+                    >
+                      Loading...
+                    </td>
+                  </tr>
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="p-8 text-center text-[#7c6c67]"
+                    >
+                      No staff found
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((member) => (
+                    <tr
+                      key={member.id}
+                      className="border-b border-[#e9e2d8] last:border-0 hover:bg-[#f7f4f0]/50"
+                    >
+                      {/* Full name */}
+                      <td className="px-[24px] py-[16px]">
+                        <div className="flex items-center gap-[12px]">
+                          <div className="size-[36px] rounded-full bg-[#b55b3e]/15 text-[#b55b3e] flex items-center justify-center text-[13px] font-semibold shrink-0">
+                            {initials(member.fullName)}
+                          </div>
+
+                          <span className="font-semibold text-[14px] text-[#2e221d]">
+                            {member.fullName}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Role */}
+                      <td className="px-[24px] py-[16px] text-[14px] text-[#7c6c67]">
+                        {member.role}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-[24px] py-[16px]">
+                        <span
+                          className={`px-[12px] py-[4px] rounded-full text-[12px] font-medium ${
+                            statusBadge[member.status] ||
+                            statusBadge.OFF_DUTY
+                          }`}
+                        >
+                          {(member.status || "OFF_DUTY").replace(
+                            "_",
+                            " "
+                          )}
+                        </span>
+                      </td>
+
+                      {/* Shift time */}
+                      <td className="px-[24px] py-[16px] text-[14px] text-[#7c6c67]">
+                        {member.shiftStart &&
+                        member.shiftEnd
+                          ? `${member.shiftStart} – ${member.shiftEnd}`
+                          : "—"}
+                      </td>
+
+                      {/* Email */}
+                      <td className="px-[24px] py-[16px] text-[14px] text-[#7c6c67]">
+                        {member.email}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-[24px] py-[16px]">
+                        <div className="flex items-center gap-[8px] justify-end">
+                          <button
+                            onClick={() => startEdit(member)}
+                            className="bg-[#f7f4f0] rounded-[6px] p-[8px] hover:bg-[#e9e2d8] transition"
+                          >
+                            <Pencil
+                              size={14}
+                              className="text-[#2e221d]"
+                            />
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              handleDelete(member.id)
+                            }
+                            className="bg-[#f7f4f0] rounded-[6px] p-[8px] hover:bg-rose-100 transition text-[#7c6c67]"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Add / Edit modal */}
+      {editing !== null && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          onClick={() => setEditing(null)}
+          style={{ fontFamily: "'Geist', sans-serif" }}
+        >
+          <div
+            className="relative bg-[#f7f4f0] border-2 border-[#e9e2d8] rounded-[19px] p-[24px] w-full max-w-[520px]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setEditing(null)}
+              className="absolute -top-3 -right-3 bg-white border border-[#e9e2d8] rounded-full p-1.5 text-[#7c6c67] hover:text-[#2e221d] shadow-sm"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Modal title */}
+            <h3 className="font-display font-bold text-[20px] text-[#2e221d] mb-[20px]">
+              {editing === "new"
+                ? "Add Staff Member"
+                : "Edit Staff Member"}
+            </h3>
+
+            {/* Personal information */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px] mb-[16px]">
+              {/* First name */}
+              <input
+                name="firstName"
+                placeholder="First name"
+                value={form.firstName}
+                onChange={handleFormChange}
+                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+              />
+
+              {/* Last name */}
+              <input
+                name="lastName"
+                placeholder="Last name"
+                value={form.lastName}
+                onChange={handleFormChange}
+                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+              />
+
+              {/* Role */}
+              <select
+                name="role"
+                value={form.role}
+                onChange={handleFormChange}
+                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+              >
+                {roles.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
+              </select>
+
+              {/* Email */}
+              <input
+                name="email"
+                type="email"
+                placeholder="Email address"
+                value={form.email}
+                onChange={handleFormChange}
+                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+              />
+
+              {/* Status */}
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleFormChange}
+                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e] sm:col-span-2"
+              >
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status.replace("_", " ")}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Shift time */}
+            <p className="text-[12px] font-medium text-[#7c6c67] mb-[8px]">
+              Shift Time
+            </p>
+
+            <div className="grid grid-cols-2 gap-[12px] mb-[24px]">
+              {/* Start time */}
+              <select
+                name="shiftStart"
+                value={form.shiftStart}
+                onChange={handleFormChange}
+                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+              >
+                <option value="">Start</option>
+
+                {timeSlots.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+
+              {/* End time */}
+              <select
+                name="shiftEnd"
+                value={form.shiftEnd}
+                onChange={handleFormChange}
+                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+              >
+                <option value="">Finish</option>
+
+                {timeSlots.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Form actions */}
+            <div className="flex items-center gap-[16px]">
               <button
                 onClick={handleSave}
-                className="px-4 py-2 rounded-xl bg-forest text-cream text-sm font-medium hover:bg-forest-light"
+                className="flex-1 bg-[#b55b3e] text-white rounded-[8px] px-[20px] py-[10px] text-[14px] font-semibold hover:opacity-90 transition"
               >
                 Save
               </button>
+
               <button
                 onClick={() => setEditing(null)}
-                className="px-4 py-2 rounded-xl border border-cream-200 text-ink-light text-sm hover:bg-white"
+                className="flex-1 border border-[#e9e2d8] text-[#7c6c67] rounded-[8px] px-[20px] py-[10px] text-[14px] font-medium hover:bg-white transition"
               >
                 Cancel
               </button>
             </div>
           </div>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-cream-50">
-              <tr>
-                <th className="px-5 py-3 text-xs font-semibold text-ink-light uppercase tracking-wider">Full Name</th>
-                <th className="px-5 py-3 text-xs font-semibold text-ink-light uppercase tracking-wider">Role</th>
-                <th className="px-5 py-3 text-xs font-semibold text-ink-light uppercase tracking-wider">Status</th>
-                <th className="px-5 py-3 text-xs font-semibold text-ink-light uppercase tracking-wider">Shift Time</th>
-                <th className="px-5 py-3 text-xs font-semibold text-ink-light uppercase tracking-wider">Contact Email</th>
-                <th className="px-5 py-3 text-xs font-semibold text-ink-light uppercase tracking-wider"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-cream-200">
-              {loading ? (
-                <tr><td colSpan="6" className="p-8 text-center text-ink-light">Loading...</td></tr>
-              ) : filtered.length === 0 ? (
-                <tr><td colSpan="6" className="p-8 text-center text-ink-light">No staff found</td></tr>
-              ) : (
-                filtered.map((m) => (
-                  <tr key={m.id} className="hover:bg-cream-50/50">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-clay-100 text-clay flex items-center justify-center text-xs font-semibold">
-                          {initials(m.fullName)}
-                        </div>
-                        <span className="font-medium text-ink">{m.fullName}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-ink-light">{m.role}</td>
-                    <td className="px-5 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusBadge[m.status]}`}>
-                        {m.status.replace("_", " ")}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-ink-light text-sm">
-                      {m.shiftStart && m.shiftEnd ? `${m.shiftStart} - ${m.shiftEnd}` : "—"}
-                    </td>
-                    <td className="px-5 py-4 text-ink-light text-sm">{m.email}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2 justify-end">
-                        <button
-                          onClick={() => startEdit(m)}
-                          className="p-1.5 rounded-lg hover:bg-cream-100 text-ink-light"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(m.id)}
-                          className="p-1.5 rounded-lg hover:bg-rose-light text-ink-light hover:text-rose"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
         </div>
-      </div>
+      )}
     </AdminLayout>
-  );
-}
-
-function StatCard({ label, value, icon: Icon }) {
-  return (
-    <div className="bg-white rounded-2xl p-5 border border-cream-200 shadow-soft">
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-sm text-ink-light">{label}</p>
-        <div className="w-8 h-8 rounded-lg bg-forest/10 text-forest flex items-center justify-center">
-          <Icon size={16} />
-        </div>
-      </div>
-      <p className="text-2xl font-display font-semibold text-ink">{value}</p>
-    </div>
   );
 }

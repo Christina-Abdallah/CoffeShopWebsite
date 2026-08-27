@@ -11,6 +11,7 @@ const dashboardRoutes = require("./src/routes/dashboard.routes");
 const menuRoutes = require("./src/routes/menu.routes");
 const staffRoutes = require("./src/routes/staff.routes");
 const messagesRoutes = require("./src/routes/messages.routes");
+const profileRoutes = require("./src/routes/profile.routes");
 
 const { requireAuth } = require("./src/middlewares/auth");
 const {
@@ -75,6 +76,7 @@ app.use("/api/admin/dashboard", csrfProtection, requireAuth, dashboardRoutes);
 app.use("/api/admin/menu", csrfProtection, requireAuth, menuRoutes);
 app.use("/api/admin/staff", csrfProtection, requireAuth, staffRoutes);
 app.use("/api/admin/messages", csrfProtection, requireAuth, messagesRoutes);
+app.use("/api/admin/profile", csrfProtection, requireAuth, profileRoutes);
 
 // Error handlers must stay at the end
 app.use(notFoundHandler);

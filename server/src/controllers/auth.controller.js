@@ -6,13 +6,19 @@ async function login(req, res, next) {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
     }
 
-    const user = await prisma.adminUser.findUnique({ where: { email } });
+    const user = await prisma.adminUser.findUnique({
+      where: { email },
+    });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({
+        message: "Invalid credentials",
+      });
     }
 
     req.session.adminId = user.id;
@@ -32,6 +38,7 @@ async function logout(req, res, next) {
   try {
     req.session.destroy((err) => {
       if (err) return next(err);
+
       res.clearCookie("brewco.sid");
       res.json({ message: "Logged out" });
     });
@@ -42,13 +49,26 @@ async function logout(req, res, next) {
 
 async function me(req, res, next) {
   try {
+    if (!req.session || !req.session.adminId) {
+      return res.status(401).json({
+        message: "Not authenticated",
+      });
+    }
+
     const user = await prisma.adminUser.findUnique({
       where: { id: req.session.adminId },
-      select: { id: true, email: true, name: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+      },
     });
 
     if (!user) {
-      return res.status(401).json({ message: "Not authenticated" });
+      return res.status(401).json({
+        message: "Not authenticated",
+      });
     }
 
     res.json(user);
@@ -57,4 +77,8 @@ async function me(req, res, next) {
   }
 }
 
-module.exports = { login, logout, me };
+module.exports = {
+  login,
+  logout,
+  me,
+};

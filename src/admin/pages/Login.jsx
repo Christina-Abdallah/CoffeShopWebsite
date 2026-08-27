@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Coffee } from "lucide-react";
 import { useAdmin } from "../useAdmin";
 
 export default function AdminLogin() {
@@ -25,57 +26,71 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-soft p-8">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-full bg-forest flex items-center justify-center">
-            <span className="text-cream font-display font-bold text-lg">B</span>
+    <div className="min-h-screen bg-[#f7f4f0] text-[#000000b2]" style={{ fontFamily: "'Commissioner', sans-serif" }}>
+      <header className="h-[100px] bg-[#152e20] px-6 py-6 flex items-center justify-center">
+        <div className="flex h-[70px] w-[194px] items-center gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-full">
+            <Coffee size={24} strokeWidth={1.8} className="text-[#d27b5a]" />
           </div>
-          <div>
-            <h1 className="text-xl font-display font-semibold text-ink">Brew & Co.</h1>
-            <p className="text-sm text-ink-light">Admin Console</p>
+          <h1 className="text-[21px] font-black leading-none text-white" style={{ fontFamily: "'Fraunces', serif" }}>
+            Brew &amp; Co.
+          </h1>
+        </div>
+      </header>
+
+      <main className="flex flex-col items-center px-6 pb-12">
+        <div className="mt-[63px] flex flex-col items-center">
+          <div className="flex size-[138px] items-center justify-center rounded-[18px]">
+            <Coffee size={75} strokeWidth={1.5} className="text-[#d27b5a]" />
           </div>
+          <h2 className="mt-0 text-[40px] font-black leading-[49px] text-[#152e20]" style={{ fontFamily: "'Fraunces', serif" }}>
+            Brew &amp; Co.
+          </h2>
         </div>
 
-        <h2 className="text-2xl font-display font-semibold text-ink mb-2">Welcome back</h2>
-        <p className="text-ink-light mb-6">Sign in to manage your café.</p>
+        <form onSubmit={handleSubmit} className="mt-[63px] flex w-full max-w-[372px] flex-col gap-[14px]">
+          {error && (
+            <div className="rounded-[7px] bg-[#fce9e5] px-[14px] py-3 text-xs text-[#8d3024]" role="alert">
+              {error}
+            </div>
+          )}
 
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-rose-light text-rose text-sm">
-            {error}
-          </div>
-        )}
+          <label className="sr-only" htmlFor="admin-email">Email</label>
+          <input
+            id="admin-email"
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-[47px] rounded-[7px] border-0 bg-white px-[14px] text-xs text-[#000000b2] outline-none placeholder:text-[#000000b2] focus:ring-2 focus:ring-[#d27b5a]"
+            required
+          />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-cream-300 bg-cream-50 px-4 py-2.5 text-ink focus:border-clay focus:ring-1 focus:ring-clay outline-none"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-cream-300 bg-cream-50 px-4 py-2.5 text-ink focus:border-clay focus:ring-1 focus:ring-clay outline-none"
-              required
-            />
-          </div>
+          <label className="sr-only" htmlFor="admin-password">Password</label>
+          <input
+            id="admin-password"
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="h-[47px] rounded-[7px] border-0 bg-white px-[14px] text-xs tracking-[0.23em] text-[#000000b2] outline-none placeholder:text-[#000000b2] focus:ring-2 focus:ring-[#d27b5a]"
+            required
+          />
+
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-xl bg-forest text-cream py-3 font-medium hover:bg-forest-light transition disabled:opacity-60"
+            className="h-[47px] rounded-[7px] border border-[#d27b5a] bg-transparent text-sm font-medium tracking-[0.23em] text-[#000000b2] transition-colors hover:bg-[#d27b5a]/10 disabled:opacity-60"
           >
-            {submitting ? "Signing in..." : "Sign In"}
+            {submitting ? "Signing in..." : "Login"}
           </button>
+
+          <div className="mt-1 flex items-center gap-1 text-[10px] font-extralight tracking-[0.23em] text-[#000000b2]">
+            <span>You don’t have an account?</span>
+            <span className="font-normal">Sign up</span>
+          </div>
         </form>
-      </div>
+      </main>
     </div>
   );
 }

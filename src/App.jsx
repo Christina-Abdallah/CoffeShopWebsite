@@ -17,6 +17,7 @@ import AdminReservations from "./admin/pages/Reservations";
 import AdminStaff from "./admin/pages/Staff";
 import AdminSettings from "./admin/pages/Settings";
 import AdminRoute from "./admin/components/AdminRoute";
+import NotFound from "./admin/pages/NotFound";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -92,14 +93,20 @@ export default function App() {
       <AdminProvider>
         <BrowserRouter>
           <ScrollToTop />
-          <Routes>
+           <Routes>
+            {/* Admin routes */}
             <Route path="/admin/*" element={<AdminRouter />} />
+
+            {/* Public routes */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Home />} />
               <Route path="/menu" element={<Menu />} />
               <Route path="/reservation" element={<Reservation />} />
               <Route path="/contact" element={<Contact />} />
             </Route>
+
+            {/* 404 route */}
+            <Route path="*" element={<NotFound/>} />
           </Routes>
         </BrowserRouter>
       </AdminProvider>

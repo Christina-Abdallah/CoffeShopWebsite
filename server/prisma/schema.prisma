@@ -49,15 +49,27 @@ enum ContactStatus {
 // -----------------------------------------------------------------------------
 
 model AdminUser {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String             @id @default(uuid())
+  email        String             @unique
   passwordHash String
   name         String?
-  role         String   @default("manager")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  role         String             @default("manager")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  emails       AdminProfileEmail[]
 
   @@map("admin_users")
+}
+
+model AdminProfileEmail {
+  id        String    @id @default(uuid())
+  email     String
+  addedAt   DateTime  @default(now())
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@map("admin_profile_emails")
 }
 
 model MenuItem {

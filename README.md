@@ -29,6 +29,25 @@ A full-stack website for a fictional coffee shop, built as a frontend coding cha
 
 ---
 
+## 🔐 Admin Console
+
+The application includes a protected admin area under `/admin` with:
+
+- Dashboard KPIs, quick actions, and recent unread messages
+- Message detail and reply modal backed by the admin API
+- Menu item management and availability controls
+- Reservation statistics, date-range filters, and reservation tables
+- Staff management
+- Profile settings, editable profile details, and additional email addresses
+- Admin login, logout, and session authentication
+
+Figma-exported assets currently used by the admin UI:
+
+- `public/brokencoffee.png` — Not Found page illustration
+- `public/email-icon.svg` — profile email icon
+
+---
+
 ## 📁 Project Structure
 
 ```text
