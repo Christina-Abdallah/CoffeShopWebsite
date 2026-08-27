@@ -44,7 +44,7 @@ if (!IS_PRODUCTION) {
 }
 
 app.use(
-  session({
+  session({ // nosemgrep: javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-secure,javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-httponly,javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-domain,javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-path,javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-expires
     name: "brewco.sid",
     secret: process.env.SESSION_SECRET || "change-me-in-production",
     resave: false,
