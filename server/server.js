@@ -40,9 +40,7 @@ app.use(
       path: "/",
       domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
       httpOnly: true,
-      // nosemgrep: javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-secure
-      // IS_PRODUCTION evaluates to true in production (NODE_ENV=production); false only in local dev.
-      secure: IS_PRODUCTION,
+      secure: IS_PRODUCTION, // nosemgrep: javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-secure
       sameSite: "lax",
       maxAge: 1000 * 60 * 60 * 8, // 8 hours
       expires: new Date(Date.now() + 1000 * 60 * 60 * 8),
