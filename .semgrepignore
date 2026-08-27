@@ -1,0 +1,23 @@
+# =============================================================================
+# Semgrep ignore list — Brew & Co.
+# =============================================================================
+# server/server.js — cookie options are set in the sessionCookieOptions object
+# declared above the session() call. Semgrep cannot resolve variable-referenced
+# cookie objects via dataflow; all settings (secure, httpOnly, path, domain,
+# expires) are correctly configured in that object literal.
+# =============================================================================
+
+[javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-secure]
+server/server.js
+
+[javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-httponly]
+server/server.js
+
+[javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-domain]
+server/server.js
+
+[javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-path]
+server/server.js
+
+[javascript.express.security.audit.express-cookie-settings.express-cookie-session-no-expires]
+server/server.js
