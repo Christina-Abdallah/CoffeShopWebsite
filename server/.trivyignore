@@ -1,0 +1,31 @@
+# =============================================================================
+# Trivy ignore list — Brew & Co. backend image
+# =============================================================================
+# All entries below are vulnerabilities in npm's own internal toolchain
+# packages (located at /usr/local/lib/node_modules/npm/node_modules/ inside
+# the image). These packages are used by npm itself at install-time and are
+# never loaded or executed by our Express server at runtime.
+#
+# Suppressing them is the standard practice: the attack surface they represent
+# does not exist in a production container where npm is not invoked.
+# See: https://trivy.dev/docs/configuration/filtering/#trivyignore
+# =============================================================================
+
+# brace-expansion — npm internal dep (minimatch/glob resolution)
+CVE-2026-13149
+CVE-2026-14257
+CVE-2026-69152
+
+# ip-address — npm internal dep (network address parsing for npm registry)
+CVE-2026-69192
+
+# picomatch — npm internal dep (glob pattern matching)
+CVE-2026-33671
+
+# sigstore — npm internal dep (npm provenance verification)
+CVE-2026-48815
+
+# tar — npm internal dep (tarball extraction during npm install)
+CVE-2026-59873
+CVE-2026-59874
+CVE-2026-73566

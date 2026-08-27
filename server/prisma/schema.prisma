@@ -43,3 +43,76 @@ enum ContactStatus {
   READ
   REPLIED
 }
+
+// -----------------------------------------------------------------------------
+// Admin models
+// -----------------------------------------------------------------------------
+
+model AdminUser {
+  id           String             @id @default(uuid())
+  email        String             @unique
+  passwordHash String
+  name         String?
+  role         String             @default("manager")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  emails       AdminProfileEmail[]
+
+  @@map("admin_users")
+}
+
+model AdminProfileEmail {
+  id        String    @id @default(uuid())
+  email     String
+  addedAt   DateTime  @default(now())
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@map("admin_profile_emails")
+}
+
+model MenuItem {
+  id          String     @id @default(uuid())
+  name        String
+  category    String
+  price       Decimal    @db.Decimal(10, 2)
+  description String?
+  imageUrl    String?
+  isAvailable Boolean    @default(true)
+  isPopular   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("menu_items")
+}
+
+model StaffMember {
+  id        String   @id @default(uuid())
+  fullName  String
+  role      String
+  email     String   @unique
+  status    StaffStatus @default(OFF_DUTY)
+  shiftStart String?
+  shiftEnd   String?
+  avatarUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("staff_members")
+}
+
+enum StaffStatus {
+  ON_SHIFT
+  ON_BREAK
+  OFF_DUTY
+}
+
+model DashboardSetting {
+  id        String @id @default(uuid())
+  key       String @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("dashboard_settings")
+}

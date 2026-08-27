@@ -35,11 +35,11 @@ export const menuItems = [
       "https://images.unsplash.com/photo-1579992357154-faf4bde95b3d?auto=format&fit=crop&w=600&q=80",
   },
   {
-    id: "espresso",
-    name: "Espresso",
+    id: "espresso-romano",
+    name: "Espresso Romano",
     category: "coffee",
-    description: "Strong and bold single shot.",
-    price: 2.25,
+    description: "Bold espresso served with a touch of fresh lemon.",
+    price: 2.75,
     image:
       "https://images.unsplash.com/photo-1510707577719-ae7c14805e3a?auto=format&fit=crop&w=600&q=80",
   },
@@ -84,7 +84,8 @@ export const menuItems = [
     id: "turkish-coffee",
     name: "Turkish Coffee",
     category: "coffee",
-    description: "Finely ground coffee brewed unfiltered, rich and strong.",
+    description:
+      "Finely ground coffee brewed unfiltered, rich and strong.",
     price: 3.25,
     image:
       "https://images.unsplash.com/photo-1524350876685-274059332603?auto=format&fit=crop&w=600&q=80",
@@ -102,12 +103,12 @@ export const menuItems = [
     id: "vienna-coffee",
     name: "Vienna Coffee",
     category: "coffee",
-    description: "Espresso topped with a generous swirl of whipped cream.",
+    description:
+      "Espresso topped with a generous swirl of whipped cream.",
     price: 4.1,
     image:
       "https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=600&q=80",
   },
-
   {
     id: "ristretto",
     name: "Ristretto",
@@ -139,7 +140,8 @@ export const menuItems = [
     id: "breve",
     name: "Breve",
     category: "coffee",
-    description: "Espresso with steamed half-and-half for extra richness.",
+    description:
+      "Espresso with steamed half-and-half for extra richness.",
     price: 4.0,
     image:
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80",
@@ -148,7 +150,8 @@ export const menuItems = [
     id: "red-eye",
     name: "Red Eye",
     category: "coffee",
-    description: "Drip coffee with a shot of espresso for extra kick.",
+    description:
+      "Drip coffee with a shot of espresso for extra kick.",
     price: 3.2,
     image:
       "https://images.unsplash.com/photo-1509785307050-d4066910ec1e?auto=format&fit=crop&w=600&q=80",
@@ -174,10 +177,10 @@ export const menuItems = [
 
   // ---------- PASTRIES ----------
   {
-    id: "butter-croissant",
-    name: "Butter Croissant",
+    id: "croissant",
+    name: "Croissant",
     category: "pastries",
-    description: "Flaky, buttery perfection baked daily.",
+    description: "Flaky, buttery French croissant baked fresh daily.",
     price: 3.2,
     badge: "Fresh",
     image:
@@ -238,7 +241,6 @@ export const menuItems = [
     image:
       "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80",
   },
-
   {
     id: "apple-turnover",
     name: "Apple Turnover",
@@ -261,7 +263,8 @@ export const menuItems = [
     id: "pretzel-croissant",
     name: "Pretzel Croissant",
     category: "pastries",
-    description: "A crossover of pretzel and croissant, salty and flaky.",
+    description:
+      "A crossover of pretzel and croissant, salty and flaky.",
     price: 3.85,
     image:
       "https://images.unsplash.com/photo-1587241321921-91a834d6d191?auto=format&fit=crop&w=600&q=80",
@@ -279,13 +282,23 @@ export const menuItems = [
     id: "pain-au-chocolat",
     name: "Pain au Chocolat",
     category: "pastries",
-    description: "Classic French pastry with rich chocolate batons.",
+    description:
+      "Classic French pastry with rich chocolate batons.",
     price: 3.8,
     image:
       "https://images.unsplash.com/photo-1568254183919-78a4f43a2877?auto=format&fit=crop&w=600&q=80",
   },
 
   // ---------- COLD DRINKS ----------
+  {
+    id: "iced-latte",
+    name: "Iced Latte",
+    category: "cold-drinks",
+    description: "Smooth espresso with cold milk served over ice.",
+    price: 4.25,
+    image:
+      "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80",
+  },
   {
     id: "iced-coffee",
     name: "Iced Coffee",
@@ -353,7 +366,8 @@ export const menuItems = [
     id: "vietnamese-iced-coffee",
     name: "Vietnamese Iced Coffee",
     category: "cold-drinks",
-    description: "Bold coffee with sweetened condensed milk over ice.",
+    description:
+      "Bold coffee with sweetened condensed milk over ice.",
     price: 4.3,
     image:
       "https://images.unsplash.com/photo-1497636577773-f1231844b336?auto=format&fit=crop&w=800&h=1000&q=80",
@@ -392,7 +406,8 @@ export const menuItems = [
     id: "macarons",
     name: "Macarons (3pc)",
     category: "other",
-    description: "Delicate almond meringue cookies, assorted flavors.",
+    description:
+      "Delicate almond meringue cookies, assorted flavors.",
     price: 4.2,
     image:
       "https://images.unsplash.com/photo-1569864358642-9d1684040f43?auto=format&fit=crop&w=600&q=80",
@@ -401,7 +416,8 @@ export const menuItems = [
     id: "waffle-with-berries",
     name: "Waffle with Berries",
     category: "other",
-    description: "Crisp waffle topped with fresh seasonal berries.",
+    description:
+      "Crisp waffle topped with fresh seasonal berries.",
     price: 5.2,
     image:
       "https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=600&q=80",
@@ -410,7 +426,8 @@ export const menuItems = [
     id: "granola-yogurt-cup",
     name: "Granola Yogurt Cup",
     category: "other",
-    description: "Creamy yogurt layered with granola and honey.",
+    description:
+      "Creamy yogurt layered with granola and honey.",
     price: 3.9,
     image:
       "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80",
@@ -419,7 +436,8 @@ export const menuItems = [
     id: "fruit-tart",
     name: "Fruit Tart",
     category: "other",
-    description: "Buttery tart shell filled with custard and fresh fruit.",
+    description:
+      "Buttery tart shell filled with custard and fresh fruit.",
     price: 4.6,
     image:
       "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?auto=format&fit=crop&w=600&q=80",
@@ -437,7 +455,8 @@ export const menuItems = [
     id: "chocolate-muffin",
     name: "Chocolate Muffin",
     category: "other",
-    description: "Moist chocolate muffin with chocolate chunks.",
+    description:
+      "Moist chocolate muffin with chocolate chunks.",
     price: 3.3,
     image:
       "https://images.unsplash.com/photo-1607478900766-efe13248b125?auto=format&fit=crop&w=600&q=80",
@@ -446,7 +465,8 @@ export const menuItems = [
     id: "pistachio-baklava",
     name: "Pistachio Baklava",
     category: "other",
-    description: "Layers of flaky filo with honey and pistachios.",
+    description:
+      "Layers of flaky filo with honey and pistachios.",
     price: 3.95,
     image:
       "https://images.unsplash.com/photo-1519676867240-f03562e64548?auto=format&fit=crop&w=600&q=80",
@@ -455,7 +475,8 @@ export const menuItems = [
     id: "churros",
     name: "Churros",
     category: "other",
-    description: "Crispy fried dough dusted with cinnamon sugar.",
+    description:
+      "Crispy fried dough dusted with cinnamon sugar.",
     price: 3.6,
     image:
       "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?auto=format&fit=crop&w=600&q=80",
@@ -464,11 +485,16 @@ export const menuItems = [
     id: "rice-krispie-treat",
     name: "Rice Krispie Treat",
     category: "other",
-    description: "Chewy marshmallow and crispy rice bar.",
+    description:
+      "Chewy marshmallow and crispy rice bar.",
     price: 2.9,
     image:
       "https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=600&q=80",
   },
 ];
 
-export const featuredIds = ["caramel-macchiato", "butter-croissant", "iced-mocha"];
+export const featuredIds = [
+  "caramel-macchiato",
+  "croissant",
+  "iced-mocha",
+];

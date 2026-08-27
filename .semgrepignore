@@ -1,0 +1,9 @@
+# =============================================================================
+# Semgrep ignore list — Brew & Co.
+# =============================================================================
+# Uses gitignore-style path patterns to exclude files from scanning.
+# For per-rule suppression on specific lines, use inline // nosemgrep comments.
+# =============================================================================
+
+# No full-file exclusions needed — per-rule suppressions are handled inline
+# in server/server.js via // nosemgrep comments on the session() call.

@@ -16,10 +16,11 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
       POSTGRES_DB: brewco
+    # Exposed only on localhost for local debugging; backend uses Docker network.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -35,36 +36,41 @@ services:
     container_name: brew-co-backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: "postgresql://postgres:password@db:5432/brewco?schema=public"
+      DATABASE_URL: "postgresql://postgres:${DB_PASSWORD:-password}@db:5432/brewco?schema=public"
       PORT: 3000
-      CLIENT_URL: "http://localhost:5175"
+      CLIENT_URL: "http://2.24.104.25:5175"
       NODE_ENV: production
+      SESSION_COOKIE_SECURE: "false"
+      SESSION_SECRET: ${SESSION_SECRET:-change-me-in-production}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@brewco.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_NAME: ${ADMIN_NAME:-Arthur Pendelton}
     ports:
-      - "3002:3000"
+      - "0.0.0.0:3002:3000"
     depends_on:
       db:
         condition: service_healthy
-    command: >
-      sh -c "npx prisma migrate deploy && npm start"
+    command: ["sh", "entrypoint.sh"]
 
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: node:20-alpine
     container_name: brew-co-frontend
     restart: unless-stopped
+    working_dir: /app
     environment:
-      VITE_API_URL: "http://localhost:3002/api"
+      VITE_API_URL: "http://2.24.104.25:3002/api"
+      VITE_ADMIN_API_URL: "http://2.24.104.25:3002/api/admin"
     ports:
-      - "5175:5173"
+      - "0.0.0.0:5175:5173"
     depends_on:
       - backend
     volumes:
       - .:/app
-      - /app/node_modules
-    command: ["npm", "run", "dev", "--", "--host"]
+      - frontend_node_modules:/app/node_modules
+    command: ["sh", "-c", "npm ci && npx vite --host 0.0.0.0"]
     stdin_open: true
     tty: true
 
 volumes:
   postgres_data:
+  frontend_node_modules:

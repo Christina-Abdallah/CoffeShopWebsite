@@ -14,3 +14,7 @@ docker-compose.yml
 # Do not copy generated files that will be recreated during the build.
 generated/prisma
 prisma/generated
+
+# Node tools should not be bundled.
+.npx
+.cache
