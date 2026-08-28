@@ -83,6 +83,14 @@ function AdminRouter() {
           </AdminRoute>
         }
       />
+      <Route
+        path="/profile"
+        element={
+          <AdminRoute>
+            <AdminSettings />
+          </AdminRoute>
+        }
+      />
     </Routes>
   );
 }
