@@ -236,7 +236,7 @@ export default function AdminSettings() {
                 <input
                   type="text"
                   placeholder="Your Name"
-                  value={isEditing ? form.fullName : ""}
+                  value={isEditing ? form.fullName : (profile?.fullName || profile?.name || "")}
                   disabled={!isEditing}
                   onChange={(e) =>
                     setForm({ ...form, fullName: e.target.value })
