@@ -80,6 +80,13 @@ async function addProfileEmail(req, res, next) {
       });
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        message: "Please enter a valid email address.",
+      });
+    }
+
     const entry = await prisma.adminProfileEmail.create({
       data: {
         email,

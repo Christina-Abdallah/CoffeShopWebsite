@@ -148,6 +148,12 @@ export default function AdminSettings() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
     try {
       const emails = await addProfileEmail(trimmed);
       setProfile((prev) => ({ ...prev, emails }));
