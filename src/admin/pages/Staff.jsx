@@ -290,7 +290,8 @@ export default function AdminStaff() {
    * --------------------------------------------------
    */
   async function handleDelete(id) {
-    if (!confirm("Remove this staff member?")) {
+    const confirmed = window.confirm("Remove this staff member?");
+    if (!confirmed) {
       return;
     }
 
