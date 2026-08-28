@@ -212,11 +212,10 @@ export default function AdminReservations() {
                 key={item}
                 type="button"
                 onClick={() => setRange(item)}
-                className={`px-[16px] py-[6px] rounded-full text-[12px] font-medium transition ${
-                  range === item
+                className={`px-[16px] py-[6px] rounded-full text-[12px] font-medium transition ${range === item
                     ? "bg-[#152e20] text-white"
                     : "text-[#2e221d] hover:bg-[#f7f4f0]"
-                }`}
+                  }`}
               >
                 {item}
               </button>

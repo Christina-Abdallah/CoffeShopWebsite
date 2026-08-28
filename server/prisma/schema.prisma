@@ -7,23 +7,15 @@ datasource db {
 }
 
 model Reservation {
-  id        String            @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
   date      DateTime
   time      String
   guests    Int
-  status    ReservationStatus @default(PENDING)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("reservations")
-}
-
-enum ReservationStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
 }
 
 model ContactMessage {
