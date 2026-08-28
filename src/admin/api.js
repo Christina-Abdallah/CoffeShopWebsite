@@ -205,24 +205,30 @@ export async function deleteStaff(id) {
 }
 
 // Reservations
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
 export async function getAdminReservations() {
-  const res = await fetch(`${API_URL}/reservations`, {
-    credentials: "include",
+  const csrfToken = await fetchCsrfToken();
+
+  const res = await fetch(`${ADMIN_API_URL}/reservations`, {
+    ...fetchOptions,
+    headers: {
+      ...fetchOptions.headers,
+      "X-CSRF-Token": csrfToken,
+    },
   });
 
   return handleResponse(res);
 }
 
 export async function updateReservation(id, payload) {
-  const res = await fetch(`${API_URL}/reservations/${id}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  const csrfToken = await fetchCsrfToken();
+
+  const res = await fetch(`${ADMIN_API_URL}/reservations/${id}`, {
+    ...fetchOptions,
     method: "PATCH",
+    headers: {
+      ...fetchOptions.headers,
+      "X-CSRF-Token": csrfToken,
+    },
     body: JSON.stringify(payload),
   });
 

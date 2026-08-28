@@ -11,33 +11,44 @@ const {
   deleteReservation,
 } = require("../controllers/reservations.controller");
 
-const router = express.Router();
+// ---------------------------------------------------------------------------
+// Public router — accessible without authentication.
+// Only the two operations that customers need from the front-end form:
+//   POST   /api/reservations          — submit a booking
+//   GET    /api/reservations/availability — check available time slots
+// ---------------------------------------------------------------------------
+const publicReservationsRouter = express.Router();
 
 // POST /api/reservations
-router.post(
+publicReservationsRouter.post(
   "/",
   validate(reservationSchema),
   createReservation
 );
 
-// GET /api/reservations
-router.get("/", listReservations);
-
 // GET /api/reservations/availability
-// Must be defined BEFORE /:id so Express matches it first.
-router.get("/availability", checkAvailability);
+publicReservationsRouter.get("/availability", checkAvailability);
 
-// GET /api/reservations/:id
-router.get("/:id", getReservationById);
+// ---------------------------------------------------------------------------
+// Admin router — mounted under /api/admin/reservations in server.js,
+// where csrfProtection + requireAuth are applied at the mount point.
+// ---------------------------------------------------------------------------
+const adminReservationsRouter = express.Router();
 
-// PATCH /api/reservations/:id
-router.patch(
+// GET /api/admin/reservations
+adminReservationsRouter.get("/", listReservations);
+
+// GET /api/admin/reservations/:id
+adminReservationsRouter.get("/:id", getReservationById);
+
+// PATCH /api/admin/reservations/:id
+adminReservationsRouter.patch(
   "/:id",
   validate(reservationUpdateSchema),
   updateReservation
 );
 
-// DELETE /api/reservations/:id
-router.delete("/:id", deleteReservation);
+// DELETE /api/admin/reservations/:id
+adminReservationsRouter.delete("/:id", deleteReservation);
 
-module.exports = router;
+module.exports = { publicReservationsRouter, adminReservationsRouter };
