@@ -120,7 +120,6 @@ export default function AdminSettings() {
     try {
       const updated = await updateProfile({
         fullName: form.fullName.trim(),
-        role: form.role.trim(),
       });
 
       setProfile((prev) => ({ ...prev, ...updated }));
@@ -247,10 +246,10 @@ export default function AdminSettings() {
                 <input
                   type="text"
                   placeholder="Your Role"
-                  value={isEditing ? form.role : ""}
-                  disabled={!isEditing}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="h-[52px] rounded-[8px] border border-[#e9e2d8] bg-white px-[20px] text-[16px] text-[#2e221d] placeholder:text-[#a89f98] outline-none focus:border-[#b55b3e] disabled:bg-white disabled:text-[#7c6c67]"
+                  value={profile?.role || ""}
+                  disabled={true}
+                  readOnly={true}
+                  className="h-[52px] rounded-[8px] border border-[#e9e2d8] bg-[#f7f4f0] px-[20px] text-[16px] text-[#7c6c67] outline-none cursor-not-allowed"
                 />
               </div>
             </div>

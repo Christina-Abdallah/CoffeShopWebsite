@@ -42,14 +42,16 @@ async function getProfile(req, res, next) {
 async function updateProfile(req, res, next) {
   try {
     const adminId = req.session.adminId;
-    const { fullName, role } = req.body;
+    const { fullName } = req.body;
+
+    const data = {};
+    if (fullName !== undefined) {
+      data.name = typeof fullName === "string" ? fullName.trim() : fullName;
+    }
 
     const profile = await prisma.adminUser.update({
       where: { id: adminId },
-      data: {
-        name: fullName,
-        role,
-      },
+      data,
       select: {
         id: true,
         name: true,
