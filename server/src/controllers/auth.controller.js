@@ -39,7 +39,10 @@ async function logout(req, res, next) {
     req.session.destroy((err) => {
       if (err) return next(err);
 
-      res.clearCookie("brewco.sid");
+      res.clearCookie("brewco.sid", {
+        path: "/",
+        domain: process.env.SESSION_COOKIE_DOMAIN || undefined,
+      });
       res.json({ message: "Logged out" });
     });
   } catch (err) {
