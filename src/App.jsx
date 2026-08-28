@@ -10,6 +10,7 @@ import { ThemeProvider } from "./context/ThemeProvider";
 
 // Admin
 import { AdminProvider } from "./admin/AdminProvider";
+import { ToastProvider } from "./admin/context/ToastContext";
 import AdminLogin from "./admin/pages/Login";
 import AdminDashboard from "./admin/pages/Dashboard";
 import AdminMenu from "./admin/pages/Menu";
@@ -83,6 +84,14 @@ function AdminRouter() {
           </AdminRoute>
         }
       />
+      <Route
+        path="/profile"
+        element={
+          <AdminRoute>
+            <AdminSettings />
+          </AdminRoute>
+        }
+      />
     </Routes>
   );
 }
@@ -90,26 +99,28 @@ function AdminRouter() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AdminProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-           <Routes>
-            {/* Admin routes */}
-            <Route path="/admin/*" element={<AdminRouter />} />
+      <ToastProvider>
+        <AdminProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+             <Routes>
+              {/* Admin routes */}
+              <Route path="/admin/*" element={<AdminRouter />} />
 
-            {/* Public routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/menu" element={<Menu />} />
-              <Route path="/reservation" element={<Reservation />} />
-              <Route path="/contact" element={<Contact />} />
-            </Route>
+              {/* Public routes */}
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/menu" element={<Menu />} />
+                <Route path="/reservation" element={<Reservation />} />
+                <Route path="/contact" element={<Contact />} />
+              </Route>
 
-            {/* 404 route */}
-            <Route path="*" element={<NotFound/>} />
-          </Routes>
-        </BrowserRouter>
-      </AdminProvider>
+              {/* 404 route */}
+              <Route path="*" element={<NotFound/>} />
+            </Routes>
+          </BrowserRouter>
+        </AdminProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

@@ -90,10 +90,6 @@ const reservationUpdateSchema = z.object({
     .min(1, "At least 1 guest is required.")
     .max(12, "For groups over 12, please call us directly.")
     .optional(),
-
-  status: z
-    .enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"])
-    .optional(),
 });
 
 // ==========================================
@@ -250,9 +246,6 @@ async function checkAvailability(req, res, next) {
         date: {
           gte: startOfDay,
           lte: endOfDay,
-        },
-        status: {
-          in: ["PENDING", "CONFIRMED"],
         },
       },
       orderBy: {

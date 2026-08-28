@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import AdminLayout from "../components/AdminLayout";
+import { useToast } from "../context/ToastContext";
 import {
   getStaff,
   createStaff,
@@ -18,17 +19,18 @@ import {
 const roles = [
   "Store Manager",
   "Head Barista",
-  "Barista",
+  "Senior Barista",
   "Pastry Chef",
-  "Cashier",
+  "Roaster & QA",
+  "Service Specialist",
 ];
 
 const statuses = ["ON_SHIFT", "ON_BREAK", "OFF_DUTY"];
 
 const statusBadge = {
-  ON_SHIFT: "bg-[#eaf5f0] text-[#1a6f54]",
-  ON_BREAK: "bg-[#fbf1ed] text-[#b55b3e]",
-  OFF_DUTY: "bg-[#f0ede7] text-[#7c6c67]",
+  ON_SHIFT: "bg-[#e8f5e9] text-[#1e7e34] border-[#c8e6c9]",
+  ON_BREAK: "bg-[#fff8e1] text-[#b78103] border-[#ffe0b2]",
+  OFF_DUTY: "bg-[#f5f5f5] text-[#616161] border-[#e0e0e0]",
 };
 
 // 30-minute time slots from 7:00 AM to 9:00 PM
@@ -46,16 +48,16 @@ const timeSlots = Array.from({ length: 29 }, (_, i) => {
 const emptyForm = {
   firstName: "",
   lastName: "",
-  role: "Barista",
+  role: "Head Barista",
   email: "",
   status: "OFF_DUTY",
-  shiftStart: "",
-  shiftEnd: "",
+  shiftStart: "07:00",
+  shiftEnd: "15:00",
 };
 
 function StatCard({ label, value, icon: Icon }) {
   return (
-    <div className="bg-white rounded-[16px] p-[20px] border border-[#e9e2d8] shadow-[0px_4px_6px_0px_rgba(46,34,29,0.02)] flex flex-col gap-[12px]">
+    <div className="bg-white rounded-[16px] p-[20px] border border-[#e9e2d8] shadow-[0px_4px_12px_0px_rgba(46,34,29,0.02)] flex flex-col gap-[12px]">
       <div className="flex items-center justify-between">
         <p className="text-[13px] font-medium text-[#7c6c67]">
           {label}
@@ -74,6 +76,7 @@ function StatCard({ label, value, icon: Icon }) {
 }
 
 export default function AdminStaff() {
+  const { showToast } = useToast();
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -248,12 +251,12 @@ export default function AdminStaff() {
       `${form.firstName} ${form.lastName}`.trim();
 
     if (!fullName) {
-      alert("Please enter the staff member's name.");
+      showToast("Please enter the staff member's name.", "error");
       return;
     }
 
     if (!form.email.trim()) {
-      alert("Please enter an email address.");
+      showToast("Please enter an email address.", "error");
       return;
     }
 
@@ -280,7 +283,7 @@ export default function AdminStaff() {
         ...emptyForm,
       });
     } catch (err) {
-      alert(err.message || "Failed to save staff member.");
+      showToast(err.message || "Failed to save staff member.", "error");
     }
   }
 
@@ -290,7 +293,8 @@ export default function AdminStaff() {
    * --------------------------------------------------
    */
   async function handleDelete(id) {
-    if (!confirm("Remove this staff member?")) {
+    const confirmed = window.confirm("Remove this staff member?");
+    if (!confirmed) {
       return;
     }
 
@@ -298,7 +302,7 @@ export default function AdminStaff() {
       await deleteStaff(id);
       await loadStaff();
     } catch (err) {
-      alert(err.message || "Failed to delete staff member.");
+      showToast(err.message || "Failed to delete staff member.", "error");
     }
   }
 

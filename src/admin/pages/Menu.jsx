@@ -7,6 +7,7 @@ import {
   Coffee,
 } from "lucide-react";
 import AdminLayout from "../components/AdminLayout";
+import { useToast } from "../context/ToastContext";
 import {
   getMenuItems,
   createMenuItem,
@@ -70,6 +71,7 @@ function ModalField({ children }) {
 }
 
 export default function AdminMenu() {
+  const { showToast } = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -145,35 +147,16 @@ export default function AdminMenu() {
 
     const matchesSearch = itemName
       .toLowerCase()
-      .includes(search.toLowerCase());
+      .includes(search.toLowerCase().trim());
 
     return matchesCategory && matchesSearch;
   });
 
   /*
-   * Open the modal in edit mode and populate the form.
+   * Open the edit modal with a blank form.
    */
-  function startEdit(item) {
-    setEditing(item.id);
-
-    setForm({
-      name: item.name || "",
-      category: (item.category || "coffee").toLowerCase(),
-      price:
-        item.price !== undefined && item.price !== null
-          ? item.price.toString()
-          : "",
-      description: item.description || "",
-      isAvailable: Boolean(item.isAvailable),
-    });
-  }
-
-  /*
-   * Open the modal in create mode.
-   */
-  function startCreate() {
+  function handleAddNew() {
     setEditing("new");
-
     setForm({
       name: "",
       category: "coffee",
@@ -184,18 +167,32 @@ export default function AdminMenu() {
   }
 
   /*
+   * Open the edit modal with an existing menu item.
+   */
+  function handleEdit(item) {
+    setEditing(item.id);
+    setForm({
+      name: item.name,
+      category: item.category,
+      price: String(item.price),
+      description: item.description || "",
+      isAvailable: item.isAvailable,
+    });
+  }
+
+  /*
    * Create a new menu item or update an existing one.
    */
   async function handleSave() {
     const parsedPrice = parseFloat(form.price);
 
     if (!form.name.trim()) {
-      alert("Please enter a product name.");
+      showToast("Please enter a product name.", "error");
       return;
     }
 
     if (Number.isNaN(parsedPrice)) {
-      alert("Please enter a valid price.");
+      showToast("Please enter a valid price.", "error");
       return;
     }
 
@@ -219,7 +216,7 @@ export default function AdminMenu() {
     } catch (err) {
       console.error("Failed to save menu item:", err);
 
-      alert(err.message || "Failed to save menu item.");
+      showToast(err.message || "Failed to save menu item.", "error");
     }
   }
 
@@ -236,7 +233,7 @@ export default function AdminMenu() {
     } catch (err) {
       console.error("Failed to update availability:", err);
 
-      alert(err.message || "Failed to update availability.");
+      showToast(err.message || "Failed to update availability.", "error");
     }
   }
 
@@ -259,7 +256,7 @@ export default function AdminMenu() {
     } catch (err) {
       console.error("Failed to delete menu item:", err);
 
-      alert(err.message || "Failed to delete menu item.");
+      showToast(err.message || "Failed to delete menu item.", "error");
     }
   }
 

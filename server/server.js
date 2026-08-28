@@ -4,7 +4,10 @@ const cors = require("cors");
 const session = require("express-session");
 const csrf = require("csurf");
 
-const reservationsRoutes = require("./src/routes/reservations.routes");
+const {
+  publicReservationsRouter,
+  adminReservationsRouter,
+} = require("./src/routes/reservations.routes");
 const contactRoutes = require("./src/routes/contact.routes");
 const authRoutes = require("./src/routes/auth.routes");
 const dashboardRoutes = require("./src/routes/dashboard.routes");
@@ -68,7 +71,8 @@ app.get("/api/health", (req, res) => {
 });
 
 // Public stateless routes (no CSRF needed)
-app.use("/api/reservations", reservationsRoutes);
+// Only create-reservation and check-availability are open to the public.
+app.use("/api/reservations", publicReservationsRouter);
 app.use("/api/contact", contactRoutes);
 
 // Admin auth routes: login needs CSRF token too because it sets a session cookie
@@ -80,6 +84,7 @@ app.get("/api/admin/csrf-token", csrfProtection, (req, res) => {
 });
 
 // Protected admin routes (all require CSRF + auth)
+app.use("/api/admin/reservations", csrfProtection, requireAuth, adminReservationsRouter);
 app.use("/api/admin/dashboard", csrfProtection, requireAuth, dashboardRoutes);
 app.use("/api/admin/menu", csrfProtection, requireAuth, menuRoutes);
 app.use("/api/admin/staff", csrfProtection, requireAuth, staffRoutes);

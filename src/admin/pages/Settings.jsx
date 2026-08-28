@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trash2, Plus, User } from "lucide-react";
 import AdminLayout from "../components/AdminLayout";
+import { useToast } from "../context/ToastContext";
 import {
   getProfile,
   updateProfile,
@@ -70,6 +71,7 @@ function Avatar({ src, name }) {
 }
 
 export default function AdminSettings() {
+  const { showToast } = useToast();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -120,14 +122,13 @@ export default function AdminSettings() {
     try {
       const updated = await updateProfile({
         fullName: form.fullName.trim(),
-        role: form.role.trim(),
       });
 
       setProfile((prev) => ({ ...prev, ...updated }));
       setIsEditing(false);
     } catch (err) {
       console.error("Failed to update profile:", err);
-      alert(err.message || "Failed to update profile.");
+      showToast(err.message || "Failed to update profile.", "error");
     } finally {
       setSaving(false);
     }
@@ -149,6 +150,12 @@ export default function AdminSettings() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmed)) {
+      showToast("Please enter a valid email address.", "error");
+      return;
+    }
+
     try {
       const emails = await addProfileEmail(trimmed);
       setProfile((prev) => ({ ...prev, emails }));
@@ -156,7 +163,7 @@ export default function AdminSettings() {
       setAddingEmail(false);
     } catch (err) {
       console.error("Failed to add email:", err);
-      alert(err.message || "Failed to add email address.");
+      showToast(err.message || "Failed to add email address.", "error");
     }
   }
 
@@ -169,7 +176,7 @@ export default function AdminSettings() {
       setProfile((prev) => ({ ...prev, emails }));
     } catch (err) {
       console.error("Failed to delete email:", err);
-      alert(err.message || "Failed to delete email address.");
+      showToast(err.message || "Failed to delete email address.", "error");
     }
   }
 
@@ -231,7 +238,7 @@ export default function AdminSettings() {
                 <input
                   type="text"
                   placeholder="Your Name"
-                  value={isEditing ? form.fullName : ""}
+                  value={isEditing ? form.fullName : (profile?.fullName || profile?.name || "")}
                   disabled={!isEditing}
                   onChange={(e) =>
                     setForm({ ...form, fullName: e.target.value })
@@ -247,10 +254,10 @@ export default function AdminSettings() {
                 <input
                   type="text"
                   placeholder="Your Role"
-                  value={isEditing ? form.role : ""}
-                  disabled={!isEditing}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="h-[52px] rounded-[8px] border border-[#e9e2d8] bg-white px-[20px] text-[16px] text-[#2e221d] placeholder:text-[#a89f98] outline-none focus:border-[#b55b3e] disabled:bg-white disabled:text-[#7c6c67]"
+                  value={profile?.role || ""}
+                  disabled={true}
+                  readOnly={true}
+                  className="h-[52px] rounded-[8px] border border-[#e9e2d8] bg-[#f7f4f0] px-[20px] text-[16px] text-[#7c6c67] outline-none cursor-not-allowed"
                 />
               </div>
             </div>
