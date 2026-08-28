@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trash2, Plus, User } from "lucide-react";
 import AdminLayout from "../components/AdminLayout";
+import { useToast } from "../context/ToastContext";
 import {
   getProfile,
   updateProfile,
@@ -70,6 +71,7 @@ function Avatar({ src, name }) {
 }
 
 export default function AdminSettings() {
+  const { showToast } = useToast();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -126,7 +128,7 @@ export default function AdminSettings() {
       setIsEditing(false);
     } catch (err) {
       console.error("Failed to update profile:", err);
-      alert(err.message || "Failed to update profile.");
+      showToast(err.message || "Failed to update profile.", "error");
     } finally {
       setSaving(false);
     }
@@ -150,7 +152,7 @@ export default function AdminSettings() {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmed)) {
-      alert("Please enter a valid email address.");
+      showToast("Please enter a valid email address.", "error");
       return;
     }
 
@@ -161,7 +163,7 @@ export default function AdminSettings() {
       setAddingEmail(false);
     } catch (err) {
       console.error("Failed to add email:", err);
-      alert(err.message || "Failed to add email address.");
+      showToast(err.message || "Failed to add email address.", "error");
     }
   }
 
@@ -174,7 +176,7 @@ export default function AdminSettings() {
       setProfile((prev) => ({ ...prev, emails }));
     } catch (err) {
       console.error("Failed to delete email:", err);
-      alert(err.message || "Failed to delete email address.");
+      showToast(err.message || "Failed to delete email address.", "error");
     }
   }
 
