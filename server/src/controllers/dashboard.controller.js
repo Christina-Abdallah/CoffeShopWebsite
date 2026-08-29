@@ -1,11 +1,21 @@
 const prisma = require("../db/prisma");
 
+// The DB stores `status` ("UNREAD" / "READ" / ...), but the frontend's
+// unread-dot logic checks a boolean `message.read !== true`.
+function withReadFlag(message) {
+  return { ...message, read: message.status === "READ" };
+}
+
 async function getDashboard(req, res, next) {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+
+    const today = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
+
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
     const [
       totalReservations,
@@ -29,8 +39,10 @@ async function getDashboard(req, res, next) {
       prisma.staffMember.count(),
       prisma.staffMember.count({ where: { status: "ON_SHIFT" } }),
       prisma.contactMessage.count({ where: { status: "UNREAD" } }),
+      // Previously filtered to status: "UNREAD" only — meaning the preview
+      // never showed already-read messages even though the design mixes
+      // both. Now takes the 5 most recent regardless of status.
       prisma.contactMessage.findMany({
-        where: { status: "UNREAD" },
         orderBy: { createdAt: "desc" },
         take: 5,
       }),
@@ -46,7 +58,7 @@ async function getDashboard(req, res, next) {
         onShift,
         unreadMessages,
       },
-      recentMessages,
+      recentMessages: recentMessages.map(withReadFlag),
     });
   } catch (err) {
     next(err);

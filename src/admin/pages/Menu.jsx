@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  
-  Plus,
-  Pencil,
-  X,
-  Coffee,
-} from "lucide-react";
+import { Plus, Pencil, X, Coffee } from "lucide-react";
 import AdminLayout from "../components/AdminLayout";
 import { useToast } from "../context/ToastContext";
 import {
@@ -23,46 +17,35 @@ const categories = [
   { label: "Specials", value: "other" },
 ];
 
-/*
- * Toggle used to change the availability status of a menu item.
- */
-function AvailabilityToggle({ isAvailable, onToggle }) {
+function AvailabilityDot({ isAvailable, onToggle }) {
   return (
     <button
       type="button"
       onClick={onToggle}
-      className="flex items-center gap-[8px]"
+      className="flex items-center gap-[6px]"
     >
       <span
-        className={`relative inline-flex h-[20px] w-[36px] items-center rounded-full transition-colors ${
-          isAvailable ? "bg-[#1a6f54]" : "bg-[#d8d2c7]"
-        }`}
-      >
-        <span
-          className={`inline-block h-[16px] w-[16px] transform rounded-full bg-white transition-transform ${
-            isAvailable ? "translate-x-[18px]" : "translate-x-[2px]"
-          }`}
-        />
-      </span>
-
+        className="size-[7px] shrink-0 rounded-full"
+        style={{
+          backgroundColor: isAvailable ? "#1a6f54" : "#b53e3e",
+        }}
+      />
       <span
-        className={`text-[13px] font-medium ${
-          isAvailable ? "text-[#1a6f54]" : "text-[#7c6c67]"
-        }`}
+        className="text-[12px] font-medium"
+        style={{
+          color: isAvailable ? "#1a6f54" : "#b53e3e",
+        }}
       >
-        {isAvailable ? "Available" : "Hidden"}
+        {isAvailable ? "Active" : "Inactive"}
       </span>
     </button>
   );
 }
 
-/*
- * Reusable styled field for the menu modal.
- */
-function ModalField({ children }) {
+function ModalField({ children, className = "" }) {
   return (
     <div
-      className="relative border border-[#e9e2d8] rounded-[7px] h-[38px] w-full bg-white shadow-[inset_0px_0px_4px_0px_rgba(0,0,0,0.25)]"
+      className={`relative border border-[#e9e2d8] rounded-[7px] h-[38px] w-full bg-white shadow-[inset_0px_0px_4px_0px_rgba(0,0,0,0.25)] ${className}`}
       style={{ fontFamily: "'Commissioner', sans-serif" }}
     >
       {children}
@@ -80,6 +63,9 @@ export default function AdminMenu() {
 
   const [editing, setEditing] = useState(null);
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+
   const [form, setForm] = useState({
     name: "",
     category: "coffee",
@@ -88,9 +74,6 @@ export default function AdminMenu() {
     isAvailable: true,
   });
 
-  /*
-   * Load menu items from the database when the page is first rendered.
-   */
   useEffect(() => {
     let cancelled = false;
 
@@ -121,9 +104,6 @@ export default function AdminMenu() {
     };
   }, []);
 
-  /*
-   * Refresh menu items from the database.
-   */
   async function refreshItems() {
     try {
       const data = await getMenuItems();
@@ -134,16 +114,12 @@ export default function AdminMenu() {
     }
   }
 
-  /*
-   * Filter menu items by category and search text.
-   */
   const filtered = items.filter((item) => {
     const itemName = item.name || "";
     const itemCategory = (item.category || "").toLowerCase();
 
     const matchesCategory =
-      activeCategory === "all" ||
-      itemCategory === activeCategory;
+      activeCategory === "all" || itemCategory === activeCategory;
 
     const matchesSearch = itemName
       .toLowerCase()
@@ -152,11 +128,30 @@ export default function AdminMenu() {
     return matchesCategory && matchesSearch;
   });
 
-  /*
-   * Open the edit modal with a blank form.
-   */
-  function handleAddNew() {
+  function startEdit(item) {
+    setEditing(item.id);
+
+    setImageFile(null);
+    setImagePreview(item.imageUrl || "");
+
+    setForm({
+      name: item.name || "",
+      category: (item.category || "coffee").toLowerCase(),
+      price:
+        item.price !== undefined && item.price !== null
+          ? item.price.toString()
+          : "",
+      description: item.description || "",
+      isAvailable: Boolean(item.isAvailable),
+    });
+  }
+
+  function startCreate() {
     setEditing("new");
+
+    setImageFile(null);
+    setImagePreview("");
+
     setForm({
       name: "",
       category: "coffee",
@@ -166,23 +161,22 @@ export default function AdminMenu() {
     });
   }
 
-  /*
-   * Open the edit modal with an existing menu item.
-   */
-  function handleEdit(item) {
-    setEditing(item.id);
-    setForm({
-      name: item.name,
-      category: item.category,
-      price: String(item.price),
-      description: item.description || "",
-      isAvailable: item.isAvailable,
-    });
+  function handleImageChange(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   }
 
-  /*
-   * Create a new menu item or update an existing one.
-   */
+  function handleDeleteImage() {
+    setImageFile(null);
+    setImagePreview("");
+  }
+
   async function handleSave() {
     const parsedPrice = parseFloat(form.price);
 
@@ -203,6 +197,10 @@ export default function AdminMenu() {
       price: parsedPrice,
     };
 
+    if (imageFile) {
+      payload.imageFile = imageFile;
+    }
+
     try {
       if (editing === "new") {
         await createMenuItem(payload);
@@ -213,6 +211,8 @@ export default function AdminMenu() {
       await refreshItems();
 
       setEditing(null);
+      setImageFile(null);
+      setImagePreview("");
     } catch (err) {
       console.error("Failed to save menu item:", err);
 
@@ -220,9 +220,6 @@ export default function AdminMenu() {
     }
   }
 
-  /*
-   * Toggle the availability of a menu item.
-   */
   async function toggleAvailable(item) {
     try {
       await updateMenuItem(item.id, {
@@ -237,9 +234,6 @@ export default function AdminMenu() {
     }
   }
 
-  /*
-   * Delete a menu item after confirmation.
-   */
   async function handleDelete(id) {
     const confirmed = window.confirm("Delete this item?");
 
@@ -253,6 +247,8 @@ export default function AdminMenu() {
       await refreshItems();
 
       setEditing(null);
+      setImageFile(null);
+      setImagePreview("");
     } catch (err) {
       console.error("Failed to delete menu item:", err);
 
@@ -261,53 +257,42 @@ export default function AdminMenu() {
   }
 
   return (
-    <AdminLayout 
-        title="Menu Management" 
-        subtitle="Create, organize, and update your daily cafe offerings."
-        search={search}
-        onSearchChange={setSearch}
-     >
+    <AdminLayout
+      title="Menu"
+      search={search}
+      onSearchChange={setSearch}
+      extraAction={{
+        icon: Plus,
+        onClick: startCreate,
+        label: "Add item",
+      }}
+    >
       <div
         style={{ fontFamily: "'Geist', sans-serif" }}
-        className="flex flex-col gap-[32px]"
+        className="flex flex-col gap-[20px]"
       >
-        {/* Category filter and search */}
+        {/* Category filter — single row, scrolls horizontally if needed */}
+        <div className="flex flex-nowrap gap-[8px] overflow-x-auto no-scrollbar -mx-[2px] px-[2px] pb-[2px]">
+          <style>{`.no-scrollbar::-webkit-scrollbar{display:none}`}</style>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-[16px]">
-          <div className="flex flex-wrap gap-[8px]">
-            {categories.map((category) => (
-              <button
-                key={category.value}
-                type="button"
-                onClick={() => setActiveCategory(category.value)}
-                className={`px-[16px] py-[8px] rounded-[20px] text-[13px] transition ${
-                  activeCategory === category.value
-                    ? "bg-[#b55b3e] text-white font-semibold"
-                    : "bg-white text-[#2e221d] font-medium border border-[#e9e2d8] hover:border-[#b55b3e]/50"
-                }`}
-              >
-                {category.label}
-              </button>
-            ))}
-          </div>
-
-         <div className="flex items-center gap-[12px]">
-  {/* Add menu item button */}
-
-  <button 
-    type="button" 
-    onClick={startCreate} 
-    className="flex items-center gap-[8px] px-[16px] py-[10px] rounded-[8px] bg-[#b55b3e] text-white text-[13px] font-semibold hover:opacity-90 transition whitespace-nowrap" 
-  >
-    <Plus size={14} />
-    Add Items
-  </button>
-</div>
+          {categories.map((category) => (
+            <button
+              key={category.value}
+              type="button"
+              onClick={() => setActiveCategory(category.value)}
+              className={`shrink-0 px-[16px] py-[8px] rounded-[20px] text-[13px] transition whitespace-nowrap ${
+                activeCategory === category.value
+                  ? "bg-[#b55b3e] text-white font-semibold"
+                  : "bg-white text-[#2e221d] font-medium border border-[#e9e2d8] hover:border-[#b55b3e]/50"
+              }`}
+            >
+              {category.label}
+            </button>
+          ))}
         </div>
 
-        {/* Menu items grid */}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-[20px]">
+        {/* Menu items grid: always 2 columns on mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-[12px] lg:gap-[20px]">
           {loading ? (
             <div className="col-span-full text-center text-[#7c6c67] py-12">
               Loading menu...
@@ -322,63 +307,43 @@ export default function AdminMenu() {
                 key={item.id}
                 className="bg-white border border-[#e9e2d8] rounded-[16px] shadow-[0px_4px_12px_0px_rgba(46,34,29,0.02)] overflow-hidden flex flex-col"
               >
-                {/* Menu item image */}
-
-                <div className="h-[160px] w-full bg-[#f7f4f0] flex items-center justify-center shrink-0 overflow-hidden">
-                  {item.imageUrl ? (
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="size-full object-cover"
-                    />
-                  ) : (
-                    <Coffee
-                      size={32}
-                      className="text-[#7c6c67]"
-                    />
-                  )}
+                {/* Menu item image — inset with padding */}
+                <div className="p-[10px] pb-0">
+                  <div className="h-[100px] lg:h-[140px] w-full rounded-[12px] bg-[#f7f4f0] flex items-center justify-center overflow-hidden">
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="size-full object-cover"
+                      />
+                    ) : (
+                      <Coffee size={26} className="text-[#7c6c67]" />
+                    )}
+                  </div>
                 </div>
 
                 {/* Menu item information */}
+                <div className="p-[12px] lg:p-[16px] flex flex-col gap-[6px]">
+                  <p className="font-display font-bold text-[14px] lg:text-[16px] text-[#2e221d] truncate">
+                    {item.name}
+                  </p>
 
-                <div className="p-[20px] flex flex-col gap-[12px]">
-                  <div className="flex items-start justify-between gap-[8px]">
-                    <div className="min-w-0">
-                      <p className="font-display font-bold text-[18px] text-[#2e221d] truncate">
-                        {item.name}
-                      </p>
+                  <p className="text-[14px] lg:text-[16px] font-bold text-[#b55b3e]">
+                    ${item.price}
+                  </p>
 
-                      <p className="text-[12px] text-[#7c6c67]">
-                        {item.category}
-                      </p>
-                    </div>
-
-                    <p className="text-[18px] font-bold text-[#b55b3e] shrink-0">
-                      ${item.price}
-                    </p>
-                  </div>
-
-                  <div className="h-px bg-[#e9e2d8]" />
-
-                  <div className="flex items-center justify-between">
-                    {/* Availability toggle */}
-
-                    <AvailabilityToggle
+                  <div className="flex items-center justify-between pt-[4px]">
+                    <AvailabilityDot
                       isAvailable={Boolean(item.isAvailable)}
                       onToggle={() => toggleAvailable(item)}
                     />
 
-                    {/* Edit button */}
-
                     <button
                       type="button"
                       onClick={() => startEdit(item)}
-                      className="bg-[#f7f4f0] rounded-[6px] p-[8px] hover:bg-[#e9e2d8] transition"
+                      className="bg-[#f7f4f0] rounded-[6px] p-[6px] hover:bg-[#e9e2d8] transition shrink-0"
                     >
-                      <Pencil
-                        size={14}
-                        className="text-[#2e221d]"
-                      />
+                      <Pencil size={12} className="text-[#2e221d]" />
                     </button>
                   </div>
                 </div>
@@ -389,18 +354,16 @@ export default function AdminMenu() {
       </div>
 
       {/* Add / Edit modal */}
-
       {editing && (
         <div
           className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
           onClick={() => setEditing(null)}
         >
           <div
-            className="relative bg-[#f7f4f0] border-2 border-[#e9e2d8] rounded-[19px] p-[23px] w-full max-w-[617px] flex flex-col sm:flex-row gap-[29px]"
+            className="relative bg-[#f7f4f0] border-2 border-[#e9e2d8] rounded-[19px] p-[23px] w-full max-w-[380px] flex flex-col gap-[16px]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close modal button */}
-
             <button
               type="button"
               onClick={() => setEditing(null)}
@@ -409,26 +372,35 @@ export default function AdminMenu() {
               <X size={16} />
             </button>
 
-            {/* Image area */}
+            {/* Image area — full width */}
+            <label className="relative border border-[#e9e2d8] bg-white rounded-[11px] h-[150px] w-full flex items-center justify-center overflow-hidden cursor-pointer shadow-[inset_0px_0px_7px_0px_rgba(0,0,0,0.35)] hover:bg-[#faf9f7] transition">
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <p
+                  className="text-[#666] text-[22px] font-light text-center leading-tight"
+                  style={{ fontFamily: "'Commissioner', sans-serif" }}
+                >
+                  ADD
+                  <br />
+                  IMAGE
+                </p>
+              )}
 
-            <div className="border border-[#e9e2d8] bg-white rounded-[11px] size-[231px] shrink-0 flex items-center justify-center shadow-[inset_0px_0px_7px_0px_rgba(0,0,0,0.35)] mx-auto sm:mx-0">
-              <p
-                className="text-[#666] text-[24px] font-light text-center leading-tight"
-                style={{
-                  fontFamily: "'Commissioner', sans-serif",
-                }}
-              >
-                ADD
-                <br />
-                IMAGE
-              </p>
-            </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
 
-            {/* Form fields */}
-
-            <div className="flex flex-col gap-[16px] w-full sm:w-[307px]">
-              {/* Price */}
-
+            {/* Price + Section, side by side */}
+            <div className="grid grid-cols-2 gap-[12px]">
               <ModalField>
                 <input
                   type="number"
@@ -437,27 +409,19 @@ export default function AdminMenu() {
                   placeholder="Price"
                   value={form.price}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      price: e.target.value,
-                    })
+                    setForm({ ...form, price: e.target.value })
                   }
                   className="size-full px-[16px] text-[15px] text-black/60 bg-transparent outline-none rounded-[7px]"
                 />
               </ModalField>
 
-              {/* Category */}
-
               <ModalField>
                 <select
                   value={form.category}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      category: e.target.value,
-                    })
+                    setForm({ ...form, category: e.target.value })
                   }
-                  className="size-full px-[16px] text-[15px] text-black/60 bg-transparent outline-none rounded-[7px]"
+                  className="size-full px-[10px] text-[15px] text-black/60 bg-transparent outline-none rounded-[7px]"
                 >
                   {categories
                     .filter((category) => category.value !== "all")
@@ -471,88 +435,83 @@ export default function AdminMenu() {
                     ))}
                 </select>
               </ModalField>
+            </div>
 
-              {/* Product name */}
+            {/* Product name */}
+            <ModalField>
+              <input
+                placeholder="Product Name"
+                value={form.name}
+                onChange={(e) =>
+                  setForm({ ...form, name: e.target.value })
+                }
+                className="size-full px-[16px] text-[15px] text-black/60 bg-transparent outline-none rounded-[7px] tracking-[1.5px]"
+              />
+            </ModalField>
 
-              <ModalField>
-                <input
-                  placeholder="Product Name"
-                  value={form.name}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      name: e.target.value,
-                    })
-                  }
-                  className="size-full px-[16px] text-[15px] text-black/60 bg-transparent outline-none rounded-[7px] tracking-[1.5px]"
-                />
-              </ModalField>
+            {/* Description — taller, multi-line */}
+            <div
+              className="relative border border-[#e9e2d8] rounded-[7px] h-[80px] w-full bg-white shadow-[inset_0px_0px_4px_0px_rgba(0,0,0,0.25)]"
+              style={{ fontFamily: "'Commissioner', sans-serif" }}
+            >
+              <textarea
+                placeholder="Add description"
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+                className="size-full resize-none px-[16px] py-[10px] text-[15px] text-black/60 bg-transparent outline-none rounded-[7px]"
+              />
+            </div>
 
-              {/* Description */}
+            {/* Availability checkbox */}
+            <label
+              className="flex items-center gap-[8px] text-[15px] text-black/60"
+              style={{ fontFamily: "'Commissioner', sans-serif" }}
+            >
+              <input
+                type="checkbox"
+                checked={form.isAvailable}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    isAvailable: e.target.checked,
+                  })
+                }
+              />
+              Available
+            </label>
 
-              <ModalField>
-                <input
-                  placeholder="Description"
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      description: e.target.value,
-                    })
-                  }
-                  className="size-full px-[16px] text-[15px] text-black/60 bg-transparent outline-none rounded-[7px]"
-                />
-              </ModalField>
-
-              {/* Availability checkbox */}
-
-              <label
-                className="flex items-center gap-[8px] text-[15px] text-black/60"
-                style={{
-                  fontFamily: "'Commissioner', sans-serif",
-                }}
+            {/* Save and delete buttons */}
+            <div className="flex items-center gap-[16px]">
+              <button
+                type="button"
+                onClick={handleSave}
+                style={{ fontFamily: "'Commissioner', sans-serif" }}
+                className="flex-1 border border-[#b55b3e] text-[#b55b3e] rounded-[7px] px-[20px] py-[9px] text-[15px] tracking-[1.5px] hover:bg-[#b55b3e]/5 transition"
               >
-                <input
-                  type="checkbox"
-                  checked={form.isAvailable}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      isAvailable: e.target.checked,
-                    })
-                  }
-                />
+                {editing === "new" ? "Add" : "Edit"}
+              </button>
 
-                Available
-              </label>
-
-              {/* Save and delete buttons */}
-
-              <div className="flex items-center gap-[25px]">
+              {editing === "new" ? (
                 <button
                   type="button"
-                  onClick={handleSave}
-                  style={{
-                    fontFamily: "'Commissioner', sans-serif",
-                  }}
-                  className="flex-1 border border-[#b55b3e] text-[#b55b3e] rounded-[7px] px-[20px] py-[9px] text-[15px] tracking-[1.5px] hover:bg-[#b55b3e]/5 transition"
+                  onClick={handleDeleteImage}
+                  style={{ fontFamily: "'Commissioner', sans-serif" }}
+                  className="flex-1 border border-[#244d36] text-[#244d36] rounded-[7px] px-[20px] py-[9px] text-[15px] tracking-[1.5px] hover:bg-[#244d36]/5 transition"
                 >
-                  {editing === "new" ? "Add" : "Edit"}
+                  Delete
                 </button>
-
-                {editing !== "new" && (
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(editing)}
-                    style={{
-                      fontFamily: "'Commissioner', sans-serif",
-                    }}
-                    className="flex-1 border border-[#244d36] text-[#244d36] rounded-[7px] px-[20px] py-[9px] text-[15px] tracking-[1.5px] hover:bg-[#244d36]/5 transition"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(editing)}
+                  style={{ fontFamily: "'Commissioner', sans-serif" }}
+                  className="flex-1 border border-[#244d36] text-[#244d36] rounded-[7px] px-[20px] py-[9px] text-[15px] tracking-[1.5px] hover:bg-[#244d36]/5 transition"
+                >
+                  Delete
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -560,3 +519,4 @@ export default function AdminMenu() {
     </AdminLayout>
   );
 }
+
