@@ -65,4 +65,4 @@ async function getDashboard(req, res, next) {
   }
 }
 
-module.exports = { getDashboard };
+module.exports = { getDashboard };

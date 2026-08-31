@@ -472,7 +472,7 @@ export default function AdminLayout({
 
       {/* Mobile bottom navigation */}
       <nav className="fixed bottom-0 left-0 right-0 h-[72px] bg-[#152e20] border-t border-white/10 flex items-center justify-around px-4 lg:hidden z-40">
-        {nav.map(({ to, icon: Icon }) => (
+        {nav.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -492,15 +492,11 @@ export default function AdminLayout({
             <Icon size={20} />
 
             <span className="text-[10px] font-medium uppercase tracking-wider">
-              {to === "/admin/reservations"
-                ? "Reservation"
-                : nav
-                    .find((n) => n.to === to)
-                    .label.split(" ")[0]}
+              {label}
             </span>
           </NavLink>
         ))}
       </nav>
     </div>
   );
-}
+}

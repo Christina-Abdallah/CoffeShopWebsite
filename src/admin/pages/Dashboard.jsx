@@ -261,7 +261,9 @@ export default function AdminDashboard() {
           Array.isArray(result?.notifications) &&
             result.notifications.length > 0
             ? result.notifications
-            : FALLBACK_NOTIFICATIONS
+            : import.meta.env.DEV
+              ? FALLBACK_NOTIFICATIONS
+              : []
         );
 
         setUnreadIds(

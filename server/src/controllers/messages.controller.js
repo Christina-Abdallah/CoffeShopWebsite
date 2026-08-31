@@ -34,4 +34,4 @@ async function updateStatus(req, res, next) {
   }
 }
 
-module.exports = { list, updateStatus };
+module.exports = { list, updateStatus };

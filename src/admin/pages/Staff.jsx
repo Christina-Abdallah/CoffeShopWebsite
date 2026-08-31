@@ -236,6 +236,11 @@ export default function AdminStaff() {
       return;
     }
 
+    if (!form.role?.trim()) {
+      showToast("Please enter a role for the staff member.", "error");
+      return;
+    }
+
     if (!form.email.trim()) {
       showToast("Please enter an email address.", "error");
       return;
@@ -245,7 +250,7 @@ export default function AdminStaff() {
     // simply carry over whatever was loaded on startEdit/startCreate.
     const payload = {
       fullName,
-      role: form.role,
+      role: form.role.trim(),
       email: form.email.trim(),
       status: form.status,
       shiftStart: form.shiftStart,
