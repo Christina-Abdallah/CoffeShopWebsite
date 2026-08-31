@@ -1,10 +1,10 @@
 # =============================================================================
-# Trivy ignore list — Brew & Co. backend image
+# Trivy ignore list — Brew & Co.
 # =============================================================================
 # All entries below are vulnerabilities in npm's own internal toolchain
 # packages (located at /usr/local/lib/node_modules/npm/node_modules/ inside
-# the image). These packages are used by npm itself at install-time and are
-# never loaded or executed by our Express server at runtime.
+# the base Node container images). These packages are used by npm itself at
+# install-time and are never loaded or executed by our application at runtime.
 #
 # Suppressing them is the standard practice: the attack surface they represent
 # does not exist in a production container where npm is not invoked.
