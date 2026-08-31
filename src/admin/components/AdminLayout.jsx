@@ -125,7 +125,7 @@ function Sidebar() {
 
           <div className="flex flex-col">
             <h1 className="text-[18px] font-black text-white leading-tight font-display">
-              Brew &amp; Co.
+              Brew & Co.
             </h1>
 
             <p className="text-[11px] font-semibold uppercase text-[#f1ebe4]/60 tracking-wide">
