@@ -5,5 +5,7 @@ const router = Router();
 
 router.get("/", messagesController.list);
 router.patch("/:id/status", messagesController.updateStatus);
+router.post("/:id/reply", messagesController.reply);
 
 module.exports = router;
+

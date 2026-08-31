@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Coffee, Calendar, Send, X } from "lucide-react";
 import AdminLayout from "../components/AdminLayout";
 import { useAdmin } from "../useAdmin";
-import { getDashboard, getMessages, replyToMessage } from "../api";
+import { getDashboard, getMessages, replyToMessage, updateMessageStatus } from "../api";
 
 const MESSAGES_PAGE_SIZE = 5;
 
@@ -365,11 +365,23 @@ export default function AdminDashboard() {
   function openMessage(message) {
     setSelectedMessage(message);
 
-    setUnreadIds((prev) => {
-      const next = new Set(prev);
-      next.delete(message.id);
-      return next;
-    });
+    if (unreadIds.has(message.id)) {
+      setUnreadIds((prev) => {
+        const next = new Set(prev);
+        next.delete(message.id);
+        return next;
+      });
+
+      setAllMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === message.id ? { ...msg, read: true, status: "READ" } : msg
+        )
+      );
+
+      updateMessageStatus(message.id, "READ").catch((err) => {
+        console.error("Failed to mark message as read:", err);
+      });
+    }
   }
 
   function handleMessageSent(id) {
@@ -378,6 +390,12 @@ export default function AdminDashboard() {
       next.delete(id);
       return next;
     });
+
+    setAllMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === id ? { ...msg, read: true, status: "REPLIED" } : msg
+      )
+    );
   }
 
   if (loading) {

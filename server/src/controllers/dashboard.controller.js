@@ -3,7 +3,7 @@ const prisma = require("../db/prisma");
 // The DB stores `status` ("UNREAD" / "READ" / ...), but the frontend's
 // unread-dot logic checks a boolean `message.read !== true`.
 function withReadFlag(message) {
-  return { ...message, read: message.status === "READ" };
+  return { ...message, read: message.status === "READ" || message.status === "REPLIED" };
 }
 
 async function getDashboard(req, res, next) {
