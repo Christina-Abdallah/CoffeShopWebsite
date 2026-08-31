@@ -1,11 +1,4 @@
-import { 
-  UsersRound, 
-  Clock, 
-  Plus, 
-  Pencil, 
-  X, 
-  Trash2, 
-} from "lucide-react";
+import { Bell, Plus, Pencil, X, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import AdminLayout from "../components/AdminLayout";
 import { useToast } from "../context/ToastContext";
@@ -33,6 +26,13 @@ const statusBadge = {
   OFF_DUTY: "bg-[#f5f5f5] text-[#616161] border-[#e0e0e0]",
 };
 
+// Note: `status` (ON_SHIFT / ON_BREAK / OFF_DUTY) still lives in the data
+// model and stat cards, but per the design it's no longer an editable field
+// in the Add/Edit modal — it's carried over as-is on save.
+
+// Rotating avatar colors, matching the design's varied initials badges.
+const AVATAR_COLORS = ["#b55b3e", "#152e20", "#2c5aa0", "#c23b7a", "#0e7c86"];
+
 // 30-minute time slots from 7:00 AM to 9:00 PM
 const timeSlots = Array.from({ length: 29 }, (_, i) => {
   const totalMinutes = 7 * 60 + i * 30;
@@ -55,22 +55,84 @@ const emptyForm = {
   shiftEnd: "15:00",
 };
 
-function StatCard({ label, value, icon: Icon }) {
+function StatCard({ label, value }) {
   return (
-    <div className="bg-white rounded-[16px] p-[20px] border border-[#e9e2d8] shadow-[0px_4px_12px_0px_rgba(46,34,29,0.02)] flex flex-col gap-[12px]">
-      <div className="flex items-center justify-between">
-        <p className="text-[13px] font-medium text-[#7c6c67]">
-          {label}
-        </p>
+    <div className="bg-white rounded-[14px] p-[12px] sm:p-[16px] border border-[#e9e2d8] shadow-[0px_4px_6px_0px_rgba(46,34,29,0.02)] flex flex-col items-center gap-[4px] text-center">
+      <p className="font-display font-bold text-[20px] sm:text-[24px] text-[#2e221d] leading-none">
+        {value}
+      </p>
+      <p className="text-[11px] font-medium text-[#7c6c67]">{label}</p>
+    </div>
+  );
+}
 
-        <div className="bg-[#fbf1ed] rounded-[8px] size-[32px] flex items-center justify-center shrink-0">
-          <Icon size={16} className="text-[#b55b3e]" />
+/*
+ * A single-row field with an inline prefix label inside the same box,
+ * e.g. "Role:  Manager, cashier, . . ." — matches the design's Add Staff form.
+ */
+function LabeledField({ label, children, className = "" }) {
+  return (
+    <div
+      className={`flex items-center gap-[6px] h-[44px] rounded-[8px] border border-[#e9e2d8] bg-white px-[14px] ${className}`}
+    >
+      <span className="text-[13px] font-medium text-[#7c6c67] whitespace-nowrap shrink-0">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function StaffCard({ member, index, onEdit, onDelete }) {
+  const color = AVATAR_COLORS[index % AVATAR_COLORS.length];
+  const initials = (member.fullName || "")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
+  return (
+    <div className="bg-white rounded-[14px] border border-[#e9e2d8] p-[14px] flex flex-col gap-[10px] shadow-[0px_2px_6px_0px_rgba(46,34,29,0.02)]">
+      <div className="flex items-center gap-[12px]">
+        <div
+          className="size-[40px] rounded-full flex items-center justify-center text-[13px] font-semibold text-white shrink-0"
+          style={{ backgroundColor: color }}
+        >
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-semibold text-[#2e221d] truncate">{member.fullName}</p>
+          <p className="text-[13px] text-[#7c6c67] truncate">{member.role}</p>
+        </div>
+        <div className="flex items-center gap-[6px] shrink-0">
+          <button
+            onClick={() => onEdit(member)}
+            className="bg-[#f7f4f0] rounded-[6px] p-[7px] hover:bg-[#e9e2d8] transition"
+            aria-label="Edit"
+          >
+            <Pencil size={13} className="text-[#2e221d]" />
+          </button>
+          <button
+            onClick={() => onDelete(member.id)}
+            className="bg-[#f7f4f0] rounded-[6px] p-[7px] hover:bg-rose-100 transition text-[#7c6c67]"
+            aria-label="Delete"
+          >
+            <Trash2 size={13} />
+          </button>
         </div>
       </div>
 
-      <p className="font-display font-bold text-[24px] text-[#2e221d] leading-none">
-        {value}
-      </p>
+      <div className="flex items-center justify-between gap-[8px]">
+        <span className="flex items-center gap-[6px] text-[12px] text-[#7c6c67] shrink-0">
+          <Bell size={12} />
+          {member.shiftStart && member.shiftEnd
+            ? `${member.shiftStart} – ${member.shiftEnd}`
+            : "—"}
+        </span>
+        <span className="text-[12px] font-medium text-[#b55b3e] truncate">{member.email}</span>
+      </div>
     </div>
   );
 }
@@ -86,14 +148,6 @@ export default function AdminStaff() {
 
   const [form, setForm] = useState(emptyForm);
 
-  /*
-   * --------------------------------------------------
-   * INITIAL LOAD
-   * --------------------------------------------------
-   *
-   * We do not call loadStaff() directly inside useEffect
-   * because loadStaff() contains state updates.
-   */
   useEffect(() => {
     let cancelled = false;
 
@@ -122,13 +176,6 @@ export default function AdminStaff() {
     };
   }, []);
 
-  /*
-   * --------------------------------------------------
-   * RELOAD STAFF
-   * --------------------------------------------------
-   *
-   * Used after creating, editing, or deleting a staff member.
-   */
   async function loadStaff() {
     try {
       const data = await getStaff();
@@ -139,74 +186,31 @@ export default function AdminStaff() {
     }
   }
 
-  /*
-   * --------------------------------------------------
-   * SEARCH
-   * --------------------------------------------------
-   */
   const searchValue = search.toLowerCase().trim();
 
   const filtered = staff.filter((member) => {
     const fullName = member.fullName?.toLowerCase() || "";
     const role = member.role?.toLowerCase() || "";
 
-    return (
-      fullName.includes(searchValue) ||
-      role.includes(searchValue)
-    );
+    return fullName.includes(searchValue) || role.includes(searchValue);
   });
 
-  /*
-   * --------------------------------------------------
-   * STAFF STATISTICS
-   * --------------------------------------------------
-   */
   const stats = {
     total: staff.length,
-
-    onShift: staff.filter(
-      (member) => member.status === "ON_SHIFT"
-    ).length,
-
-    onBreak: staff.filter(
-      (member) => member.status === "ON_BREAK"
-    ).length,
-
-    offDuty: staff.filter(
-      (member) => member.status === "OFF_DUTY"
-    ).length,
+    onShift: staff.filter((member) => member.status === "ON_SHIFT").length,
+    onBreak: staff.filter((member) => member.status === "ON_BREAK").length,
+    offDuty: staff.filter((member) => member.status === "OFF_DUTY").length,
   };
 
-  /*
-   * --------------------------------------------------
-   * GET INITIALS
-   * --------------------------------------------------
-   */
-  function initials(name = "") {
-    return name
-      .split(" ")
-      .filter(Boolean)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }
-
-  /*
-   * --------------------------------------------------
-   * EDIT STAFF MEMBER
-   * --------------------------------------------------
-   */
   function startEdit(member) {
-    const [firstName, ...rest] =
-      (member.fullName || "").split(" ");
+    const [firstName, ...rest] = (member.fullName || "").split(" ");
 
     setEditing(member.id);
 
     setForm({
       firstName: firstName || "",
       lastName: rest.join(" "),
-      role: member.role || "Barista",
+      role: member.role || "",
       email: member.email || "",
       status: member.status || "OFF_DUTY",
       shiftStart: member.shiftStart || "",
@@ -214,44 +218,26 @@ export default function AdminStaff() {
     });
   }
 
-  /*
-   * --------------------------------------------------
-   * CREATE STAFF MEMBER
-   * --------------------------------------------------
-   */
   function startCreate() {
     setEditing("new");
-
-    setForm({
-      ...emptyForm,
-    });
+    setForm({ ...emptyForm });
   }
 
-  /*
-   * --------------------------------------------------
-   * HANDLE FORM CHANGES
-   * --------------------------------------------------
-   */
   function handleFormChange(event) {
     const { name, value } = event.target;
-
-    setForm((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
+    setForm((previous) => ({ ...previous, [name]: value }));
   }
 
-  /*
-   * --------------------------------------------------
-   * SAVE STAFF MEMBER
-   * --------------------------------------------------
-   */
   async function handleSave() {
-    const fullName =
-      `${form.firstName} ${form.lastName}`.trim();
+    const fullName = `${form.firstName} ${form.lastName}`.trim();
 
     if (!fullName) {
       showToast("Please enter the staff member's name.", "error");
+      return;
+    }
+
+    if (!form.role?.trim()) {
+      showToast("Please enter a role for the staff member.", "error");
       return;
     }
 
@@ -260,9 +246,11 @@ export default function AdminStaff() {
       return;
     }
 
+    // Status isn't exposed in this form (it's not part of the design), so we
+    // simply carry over whatever was loaded on startEdit/startCreate.
     const payload = {
       fullName,
-      role: form.role,
+      role: form.role.trim(),
       email: form.email.trim(),
       status: form.status,
       shiftStart: form.shiftStart,
@@ -279,19 +267,12 @@ export default function AdminStaff() {
       await loadStaff();
 
       setEditing(null);
-      setForm({
-        ...emptyForm,
-      });
+      setForm({ ...emptyForm });
     } catch (err) {
       showToast(err.message || "Failed to save staff member.", "error");
     }
   }
 
-  /*
-   * --------------------------------------------------
-   * DELETE STAFF MEMBER
-   * --------------------------------------------------
-   */
   async function handleDelete(id) {
     const confirmed = window.confirm("Remove this staff member?");
     if (!confirmed) {
@@ -307,194 +288,39 @@ export default function AdminStaff() {
   }
 
   return (
-   <AdminLayout
-  title="Staff Management"
-  subtitle="Manage shifts, roles, and contacts of your store crew."
-  search={search}
-  onSearchChange={setSearch}
->
-      <div
-        style={{ fontFamily: "'Geist', sans-serif" }}
-        className="flex flex-col gap-[32px]"
-      >
-        {/* Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[20px]">
-          <StatCard
-            label="Total Employees"
-            value={`${stats.total} Staff`}
-            icon={UsersRound}
-          />
+    <AdminLayout
+      title="Staff Crew"
+      search={search}
+      onSearchChange={setSearch}
+      extraAction={{ icon: Plus, onClick: startCreate, label: "Add staff" }}
+    >
+      <div style={{ fontFamily: "'Geist', sans-serif" }} className="flex flex-col gap-[20px]">
 
-          <StatCard
-            label="On Shift Today"
-            value={`${stats.onShift} Active`}
-            icon={Clock}
-          />
-
-          <StatCard
-            label="On Break"
-            value={`${stats.onBreak} Break`}
-            icon={Clock}
-          />
-
-          <StatCard
-            label="Off Duty"
-            value={`${stats.offDuty} Off`}
-            icon={UsersRound}
-          />
+        {/* Statistics — 4 across, no icons */}
+        <div className="grid grid-cols-4 gap-[8px] sm:gap-[16px]">
+          <StatCard label="Total Crew" value={stats.total} />
+          <StatCard label="On Shift" value={stats.onShift} />
+          <StatCard label="On Break" value={stats.onBreak} />
+          <StatCard label="Off Duty" value={stats.offDuty} />
         </div>
 
-        {/* Staff table */}
-        <div className="bg-white rounded-[16px] border border-[#e9e2d8] shadow-[0px_4px_12px_0px_rgba(46,34,29,0.02)] overflow-hidden">
-          {/* Table header */}
-          <div className="px-[24px] py-[20px] border-b border-[#e9e2d8] flex flex-col sm:flex-row sm:items-center justify-between gap-[16px]">
-            <h2 className="font-display font-bold text-[18px] text-[#2e221d]">
-              All Staff Members
-            </h2>
-
-            <div className="flex items-center gap-[12px]">
-              
-
-              {/* Add Staff button */}
-              <button
-                onClick={startCreate}
-                className="flex items-center gap-[8px] px-[16px] py-[10px] rounded-[8px] bg-[#b55b3e] text-white text-[13px] font-semibold hover:opacity-90 transition whitespace-nowrap"
-              >
-                <Plus size={14} />
-                Add Staff
-              </button>
-            </div>
-          </div>
-
-          {/* Staff table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[#e9e2d8]">
-                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
-                    Full Name
-                  </th>
-
-                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
-                    Role
-                  </th>
-
-                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
-                    Status
-                  </th>
-
-                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
-                    Shift Time
-                  </th>
-
-                  <th className="px-[24px] py-[16px] text-[13px] font-semibold text-[#7c6c67]">
-                    Contact Email
-                  </th>
-
-                  <th className="px-[24px] py-[16px]"></th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="p-8 text-center text-[#7c6c67]"
-                    >
-                      Loading...
-                    </td>
-                  </tr>
-                ) : filtered.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="p-8 text-center text-[#7c6c67]"
-                    >
-                      No staff found
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((member) => (
-                    <tr
-                      key={member.id}
-                      className="border-b border-[#e9e2d8] last:border-0 hover:bg-[#f7f4f0]/50"
-                    >
-                      {/* Full name */}
-                      <td className="px-[24px] py-[16px]">
-                        <div className="flex items-center gap-[12px]">
-                          <div className="size-[36px] rounded-full bg-[#b55b3e]/15 text-[#b55b3e] flex items-center justify-center text-[13px] font-semibold shrink-0">
-                            {initials(member.fullName)}
-                          </div>
-
-                          <span className="font-semibold text-[14px] text-[#2e221d]">
-                            {member.fullName}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Role */}
-                      <td className="px-[24px] py-[16px] text-[14px] text-[#7c6c67]">
-                        {member.role}
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-[24px] py-[16px]">
-                        <span
-                          className={`px-[12px] py-[4px] rounded-full text-[12px] font-medium ${
-                            statusBadge[member.status] ||
-                            statusBadge.OFF_DUTY
-                          }`}
-                        >
-                          {(member.status || "OFF_DUTY").replace(
-                            "_",
-                            " "
-                          )}
-                        </span>
-                      </td>
-
-                      {/* Shift time */}
-                      <td className="px-[24px] py-[16px] text-[14px] text-[#7c6c67]">
-                        {member.shiftStart &&
-                        member.shiftEnd
-                          ? `${member.shiftStart} – ${member.shiftEnd}`
-                          : "—"}
-                      </td>
-
-                      {/* Email */}
-                      <td className="px-[24px] py-[16px] text-[14px] text-[#7c6c67]">
-                        {member.email}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-[24px] py-[16px]">
-                        <div className="flex items-center gap-[8px] justify-end">
-                          <button
-                            onClick={() => startEdit(member)}
-                            className="bg-[#f7f4f0] rounded-[6px] p-[8px] hover:bg-[#e9e2d8] transition"
-                          >
-                            <Pencil
-                              size={14}
-                              className="text-[#2e221d]"
-                            />
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              handleDelete(member.id)
-                            }
-                            className="bg-[#f7f4f0] rounded-[6px] p-[8px] hover:bg-rose-100 transition text-[#7c6c67]"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        {/* Staff list */}
+        <div className="flex flex-col gap-[12px]">
+          {loading ? (
+            <div className="p-8 text-center text-[#7c6c67]">Loading...</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-8 text-center text-[#7c6c67]">No staff found</div>
+          ) : (
+            filtered.map((member, index) => (
+              <StaffCard
+                key={member.id}
+                member={member}
+                index={index}
+                onEdit={startEdit}
+                onDelete={handleDelete}
+              />
+            ))
+          )}
         </div>
       </div>
 
@@ -506,10 +332,9 @@ export default function AdminStaff() {
           style={{ fontFamily: "'Geist', sans-serif" }}
         >
           <div
-            className="relative bg-[#f7f4f0] border-2 border-[#e9e2d8] rounded-[19px] p-[24px] w-full max-w-[520px]"
+            className="relative bg-[#f7f4f0] border-2 border-[#e9e2d8] rounded-[19px] p-[24px] w-full max-w-[420px] flex flex-col gap-[12px]"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* Close button */}
             <button
               onClick={() => setEditing(null)}
               className="absolute -top-3 -right-3 bg-white border border-[#e9e2d8] rounded-full p-1.5 text-[#7c6c67] hover:text-[#2e221d] shadow-sm"
@@ -517,113 +342,88 @@ export default function AdminStaff() {
               <X size={16} />
             </button>
 
-            {/* Modal title */}
-            <h3 className="font-display font-bold text-[20px] text-[#2e221d] mb-[20px]">
-              {editing === "new"
-                ? "Add Staff Member"
-                : "Edit Staff Member"}
+            <h3 className="font-display font-bold text-[20px] text-[#2e221d] mb-[4px]">
+              {editing === "new" ? "Add Staff Member" : "Edit Staff Member"}
             </h3>
 
-            {/* Personal information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px] mb-[16px]">
-              {/* First name */}
+            {/* First / Last name */}
+            <div className="grid grid-cols-2 gap-[12px]">
               <input
                 name="firstName"
                 placeholder="First name"
                 value={form.firstName}
                 onChange={handleFormChange}
-                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+                className="h-[44px] px-[14px] rounded-[8px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
               />
-
-              {/* Last name */}
               <input
                 name="lastName"
                 placeholder="Last name"
                 value={form.lastName}
                 onChange={handleFormChange}
-                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+                className="h-[44px] px-[14px] rounded-[8px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
               />
+            </div>
 
-              {/* Role */}
-              <select
+            {/* Role — free text, inline label */}
+            <LabeledField label="Role:">
+              <input
                 name="role"
+                placeholder="Manager, cashier, . . ."
                 value={form.role}
                 onChange={handleFormChange}
-                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
-              >
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </select>
+                className="flex-1 min-w-0 bg-transparent text-[13px] text-[#2e221d] placeholder:text-[#a89f98] outline-none"
+              />
+            </LabeledField>
 
-              {/* Email */}
+            {/* Email — inline label */}
+            <LabeledField label="Member Email:">
               <input
                 name="email"
                 type="email"
-                placeholder="Email address"
+                placeholder="Example@gmail.com"
                 value={form.email}
                 onChange={handleFormChange}
-                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
+                className="flex-1 min-w-0 bg-transparent text-[13px] text-[#2e221d] placeholder:text-[#a89f98] outline-none"
               />
+            </LabeledField>
 
-              {/* Status */}
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleFormChange}
-                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e] sm:col-span-2"
-              >
-                {statuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status.replace("_", " ")}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Shift start / finish — inline labels, side by side */}
+            <div className="grid grid-cols-2 gap-[12px]">
+              <LabeledField label="Start shift at">
+                <select
+                  name="shiftStart"
+                  value={form.shiftStart}
+                  onChange={handleFormChange}
+                  className="flex-1 min-w-0 bg-transparent text-[13px] text-[#2e221d] outline-none"
+                >
+                  <option value="">—</option>
+                  {timeSlots.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
+              </LabeledField>
 
-            {/* Shift time */}
-            <p className="text-[12px] font-medium text-[#7c6c67] mb-[8px]">
-              Shift Time
-            </p>
-
-            <div className="grid grid-cols-2 gap-[12px] mb-[24px]">
-              {/* Start time */}
-              <select
-                name="shiftStart"
-                value={form.shiftStart}
-                onChange={handleFormChange}
-                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
-              >
-                <option value="">Start</option>
-
-                {timeSlots.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
-                ))}
-              </select>
-
-              {/* End time */}
-              <select
-                name="shiftEnd"
-                value={form.shiftEnd}
-                onChange={handleFormChange}
-                className="h-[38px] px-[16px] rounded-[7px] border border-[#e9e2d8] bg-white text-[14px] text-[#2e221d] outline-none focus:border-[#b55b3e]"
-              >
-                <option value="">Finish</option>
-
-                {timeSlots.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
-                ))}
-              </select>
+              <LabeledField label="Finish shift at">
+                <select
+                  name="shiftEnd"
+                  value={form.shiftEnd}
+                  onChange={handleFormChange}
+                  className="flex-1 min-w-0 bg-transparent text-[13px] text-[#2e221d] outline-none"
+                >
+                  <option value="">—</option>
+                  {timeSlots.map((time) => (
+                    <option key={time} value={time}>
+                      {time}
+                    </option>
+                  ))}
+                </select>
+              </LabeledField>
             </div>
 
             {/* Form actions */}
-            <div className="flex items-center gap-[16px]">
+            <div className="flex items-center gap-[16px] mt-[8px]">
               <button
                 onClick={handleSave}
                 className="flex-1 bg-[#b55b3e] text-white rounded-[8px] px-[20px] py-[10px] text-[14px] font-semibold hover:opacity-90 transition"
