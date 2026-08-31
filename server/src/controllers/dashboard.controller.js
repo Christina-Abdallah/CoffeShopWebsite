@@ -25,6 +25,7 @@ async function getDashboard(req, res, next) {
       staffCount,
       onShift,
       unreadMessages,
+      totalMessages,
       recentMessages,
     ] = await Promise.all([
       prisma.reservation.count(),
@@ -39,6 +40,7 @@ async function getDashboard(req, res, next) {
       prisma.staffMember.count(),
       prisma.staffMember.count({ where: { status: "ON_SHIFT" } }),
       prisma.contactMessage.count({ where: { status: "UNREAD" } }),
+      prisma.contactMessage.count(),
       // Previously filtered to status: "UNREAD" only — meaning the preview
       // never showed already-read messages even though the design mixes
       // both. Now takes the 5 most recent regardless of status.
@@ -58,6 +60,7 @@ async function getDashboard(req, res, next) {
         onShift,
         unreadMessages,
       },
+      hasMoreMessages: totalMessages > 5,
       recentMessages: recentMessages.map(withReadFlag),
     });
   } catch (err) {

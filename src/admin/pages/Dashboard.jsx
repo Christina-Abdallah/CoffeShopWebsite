@@ -255,7 +255,11 @@ export default function AdminDashboard() {
           : [];
 
         setAllMessages(dashboardMessages);
-        setHasMoreMessages(Boolean(result?.hasMoreMessages));
+        setHasMoreMessages(
+          result?.hasMoreMessages !== undefined
+            ? Boolean(result.hasMoreMessages)
+            : dashboardMessages.length >= MESSAGES_PAGE_SIZE
+        );
 
         setNotifications(
           Array.isArray(result?.notifications) &&
